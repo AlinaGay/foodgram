@@ -16,7 +16,7 @@ class User(AbstractUser):
     )
     first_name = models.CharField(max_length=NAME_MAX_LENGTH)
     last_name = models.CharField(max_length=NAME_MAX_LENGTH)
-    username = models.CharField(max_length=NAME_MAX_LENGTH)
+    username = models.CharField(max_length=NAME_MAX_LENGTH, unique=True)
     role = models.CharField(
         max_length=max(len(role) for role, _ in ROLE_CHOICES),
         choices=ROLE_CHOICES,
@@ -65,7 +65,7 @@ class Recipes(models.Model):
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipes, on_delete=models.SET_NULL,
                                blank=True, null=True)
-    ingredient = models.ForeignKey(Ingredients, on_delete=-models.SET_NULL,
+    ingredient = models.ForeignKey(Ingredients, on_delete=models.SET_NULL,
                                    blank=True, null=True)
 
 
