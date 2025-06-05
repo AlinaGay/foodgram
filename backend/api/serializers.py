@@ -8,5 +8,4 @@ User = get_user_model()
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
-        exclude = ('id',)
         model = Ingredients
