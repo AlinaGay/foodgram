@@ -30,6 +30,10 @@ class User(AbstractUser):
         default=None
     )
 
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN or self.is_superuser
+
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=NAME_MAX_LENGTH)

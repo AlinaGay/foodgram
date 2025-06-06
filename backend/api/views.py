@@ -6,7 +6,7 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from recipes.models import Ingredient, Recipe, Tag, User
-from .serializers import IngredientSerializer
+from .serializers import IngredientSerializer, TagSerializer
 
 
 # User = get_user_model()
@@ -19,3 +19,8 @@ class CDLViewSet(RetrieveAPIView, ListModelMixin, GenericViewSet):
 class IngredientViewSet(CDLViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+
+
+class TagViewSet(CDLViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer

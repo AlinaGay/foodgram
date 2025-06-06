@@ -1,7 +1,6 @@
 import csv
 import os
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 
@@ -22,7 +21,7 @@ class Command(BaseCommand):
             count = 0
             for row in reader:
                 if len(row) < 2:
-                    continue 
+                    continue
                 try:
                     Ingredient.objects.update_or_create(
                         name=row[0],
