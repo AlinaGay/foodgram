@@ -31,21 +31,21 @@ class User(AbstractUser):
     )
 
 
-class Ingredients(models.Model):
+class Ingredient(models.Model):
     name = models.CharField(max_length=NAME_MAX_LENGTH)
     measurement_unit = models.CharField(max_length=16)
 
 
-class Tags(models.Model):
+class Tag(models.Model):
     name = models.CharField(max_length=NAME_MAX_LENGTH)
     slug = models.SlugField(max_length=SLUG_MAX_LENGTH, unique=True)
 
 
-class Recipes(models.Model):
-    tags = models.ManyToManyField(Tags, through='RecipeTag',
+class Recipe(models.Model):
+    tags = models.ManyToManyField(Tag, through='RecipeTag',
                                   through_fields=('recipe', 'tag'))
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    ingredients = models.ManyToManyField(Ingredients,
+    ingredients = models.ManyToManyField(Ingredient,
                                          through='RecipeIngredient',
                                          through_fields=('recipe',
                                                          'ingredient'))
@@ -63,14 +63,14 @@ class Recipes(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(Recipes, on_delete=models.SET_NULL,
+    recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL,
                                blank=True, null=True)
-    ingredient = models.ForeignKey(Ingredients, on_delete=models.SET_NULL,
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.SET_NULL,
                                    blank=True, null=True)
 
 
 class RecipeTag(models.Model):
-    recipe = models.ForeignKey(Recipes, on_delete=models.SET_NULL,
+    recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL,
                                blank=True, null=True)
-    tag = models.ForeignKey(Tags, on_delete=models.SET_NULL,
+    tag = models.ForeignKey(Tag, on_delete=models.SET_NULL,
                             blank=True, null=True)
