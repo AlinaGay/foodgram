@@ -154,8 +154,13 @@ DJOSER = {
         'user': ['rest_framework.permissions.AllowAny'],  # GET /users/{id}/
         'user_list': ['rest_framework.permissions.IsAdminUser'],  # GET /users/
         'user_create': ['rest_framework.permissions.AllowAny'],  # POST /users/
-        'user_delete': ['rest_framework.permissions.IsAdminUser'],  # DELETE /users/{id}/
-        'current_user': ['rest_framework.permissions.IsAuthenticated'],  # GET /users/me/
-        'set_password': ['rest_framework.permissions.IsAuthenticated'],  # POST /users/set_password/
     },
+    'SERIALIZERS': {
+        'user_create': 'recipes.serializers.CustomUserCreateSerializer',
+    },
+
+    'LOGIN_FIELD': 'email',
+    'SEND_ACTIVATION_EMAIL': False,
+    'HIDE_USERS': False,
+    
 }

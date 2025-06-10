@@ -24,3 +24,4 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         model = User
         fields = ('id', 'email', 'username',
                   'first_name', 'last_name', 'password')
+        read_only_fields = ['id']
