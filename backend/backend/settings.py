@@ -37,8 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework.authtoken',
     'rest_framework',
     'corsheaders',
+    'djoser',
     'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
 ]
@@ -131,8 +133,29 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'recipes.User'
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
-CORS_URLS_REGEX = r'^/api/.*$'
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+
+}
+
+DJOSER = {
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.AllowAny'],  # GET /users/{id}/
+        'user_list': ['rest_framework.permissions.IsAdminUser'],  # GET /users/
+        'user_create': ['rest_framework.permissions.AllowAny'],  # POST /users/
+        'user_delete': ['rest_framework.permissions.IsAdminUser'],  # DELETE /users/{id}/
+        'current_user': ['rest_framework.permissions.IsAuthenticated'],  # GET /users/me/
+        'set_password': ['rest_framework.permissions.IsAuthenticated'],  # POST /users/set_password/
+    },
+}
