@@ -16,7 +16,7 @@ class User(AbstractUser):
     )
     first_name = models.CharField(max_length=NAME_MAX_LENGTH)
     last_name = models.CharField(max_length=NAME_MAX_LENGTH)
-    username = models.CharField(max_length=NAME_MAX_LENGTH, unique=True)
+    username = models.CharField(max_length=NAME_MAX_LENGTH, blank=True, null=True)
     role = models.CharField(
         max_length=max(len(role) for role, _ in ROLE_CHOICES),
         choices=ROLE_CHOICES,
@@ -29,6 +29,9 @@ class User(AbstractUser):
         null=True,
         default=None
     )
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
 
     @property
     def is_admin(self):

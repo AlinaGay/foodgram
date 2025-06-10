@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from djoser.serializers import UserCreateSerializer
+from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
 
 from recipes.models import Ingredient, Tag
@@ -25,3 +25,11 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         fields = ('id', 'email', 'username',
                   'first_name', 'last_name', 'password')
         read_only_fields = ['id']
+
+
+class CustomUserSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        model = User
+        fields = ('id', 'email', 'username',
+                  'first_name', 'last_name', 'is_subscribed', 'avatar')
+        read_only_fields = ('id', 'email')

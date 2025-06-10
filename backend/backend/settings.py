@@ -151,16 +151,19 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'PERMISSIONS': {
-        'user': ['rest_framework.permissions.AllowAny'],  # GET /users/{id}/
+        'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],  # GET /users/{id}/
         'user_list': ['rest_framework.permissions.IsAdminUser'],  # GET /users/
         'user_create': ['rest_framework.permissions.AllowAny'],  # POST /users/
+        'current_user': ['rest_framework.permissions.IsAuthenticated'],
     },
     'SERIALIZERS': {
-        'user_create': 'recipes.serializers.CustomUserCreateSerializer',
+        'user_create': 'api.serializers.CustomUserCreateSerializer',
+        'user': 'api.serializers.CustomUserSerializer',  # для просмотра профиля
+        'current_user': 'api.serializers.CustomUserSerializer',
     },
 
     'LOGIN_FIELD': 'email',
+    'USER_ID_FIELD': 'email',
     'SEND_ACTIVATION_EMAIL': False,
     'HIDE_USERS': False,
-    
 }
