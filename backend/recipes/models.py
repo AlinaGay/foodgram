@@ -74,6 +74,7 @@ class RecipeIngredient(models.Model):
                                blank=True, null=True)
     ingredient = models.ForeignKey(Ingredient, on_delete=models.SET_NULL,
                                    blank=True, null=True)
+    amount = models.PositiveIntegerField(null=True)
 
 
 class RecipeTag(models.Model):

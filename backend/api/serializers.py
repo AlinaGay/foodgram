@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
 
-from recipes.models import Ingredient, Tag
+from recipes.models import Ingredient, Recipe, Tag
 
 User = get_user_model()
 
@@ -33,3 +33,9 @@ class CustomUserSerializer(UserSerializer):
         fields = ('id', 'email', 'username',
                   'first_name', 'last_name', 'is_subscribed', 'avatar')
         read_only_fields = ('id', 'email')
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = '__all__'
