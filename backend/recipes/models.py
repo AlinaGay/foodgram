@@ -66,7 +66,7 @@ class Recipe(models.Model):
     )
     text = models.TextField()
     cooking_time = models.PositiveIntegerField()
-    short_link = models.URLField(default=None)
+    short_link = models.URLField(null=True, blank=True)
 
 
 class RecipeIngredient(models.Model):
