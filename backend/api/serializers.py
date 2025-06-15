@@ -50,24 +50,14 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
-# Ingredient (для записи ингредиентов)
-class RecipeIngredientWriteSerializer(serializers.Serializer):
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField()
-
-    class Meta:
-        model = RecipeIngredient
-        fields = ('id', 'amount')
-
-
 # Основной Recipe сериализатор для чтения
 class RecipeSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     ingredients = RecipeIngredientSerializer(
-        source='recipe_ingredients',
+        source='recipeingredient_set',
         many=True,
-        read_only=True,
+        read_only=True
     )
 
     class Meta:
@@ -81,6 +71,16 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_ingredients(self, obj):
         ingredients = RecipeIngredient.objects.filter(recipe=obj)
         return RecipeIngredientSerializer(ingredients, many=True).data
+
+
+# Ingredient (для записи ингредиентов)
+class RecipeIngredientWriteSerializer(serializers.Serializer):
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    amount = serializers.IntegerField()
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'amount')
 
 
 # Основной Recipe сериализатор для записи
@@ -135,6 +135,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         ])
 
     def create(self, validated_data):
+        print('initial validated_data inside create', validated_data)
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
@@ -143,13 +144,20 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
+        print('initial validated_data inside update', validated_data)
+        print('instance:', instance.__dict__)
         if 'ingredients' in validated_data:
+            print('ingredients in validated_data')
             ingredients = validated_data.pop('ingredients')
             instance.ingredients.clear()
             self.create_ingredients(ingredients, instance)
+            
         if 'tags' in validated_data:
-            instance.tags.set(validated_data.pop('tags'))
-        return super().update(instance, validated_data)
+            instance.tags.set(validated_data['tags'])
+        print('updated validated_data inside update', validated_data)
+        data = super().update(instance, validated_data)
+        print('data inside update', instance.__dict__)
+        return data
 
     def to_representation(self, instance):
         return RecipeSerializer(instance, context=self.context).data
