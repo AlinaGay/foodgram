@@ -35,6 +35,13 @@ class IngredientViewSet(CDLViewSet):
     search_fields = ('name',)
     pagination_class = None
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        name = self.request.query_params.get('name')
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+        return queryset
+
 
 class TagViewSet(CDLViewSet):
     queryset = Tag.objects.all()
@@ -50,6 +57,9 @@ class RecipeViewSet(ModelViewSet):
     ordering_fields = ('-pub_date',)
     permission_classes = (IsAuthorOrReadOnly,)
     serializer_class = RecipeSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):

@@ -1,4 +1,6 @@
+import base64
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
@@ -22,6 +24,16 @@ class CustomUserSerializer(UserSerializer):
         fields = ('id', 'email', 'username',
                   'first_name', 'last_name', 'is_subscribed', 'avatar')
         read_only_fields = ('id', 'email')
+
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')  
+            ext = format.split('/')[-1]  
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super().to_internal_value(data)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -59,6 +71,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True
     )
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -89,11 +102,12 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientWriteSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
+    image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Recipe
         fields = ('id', 'author', 'tags', 'ingredients',
-                  'name', 'text', 'cooking_time')
+                  'name', 'image', 'text', 'cooking_time')
 
     def validate(self, data):
         ingredients = data.get('ingredients')
@@ -144,20 +158,15 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        print('initial validated_data inside update', validated_data)
-        print('instance:', instance.__dict__)
+        instance.image = validated_data.get('image', instance.image)
         if 'ingredients' in validated_data:
-            print('ingredients in validated_data')
             ingredients = validated_data.pop('ingredients')
             instance.ingredients.clear()
             self.create_ingredients(ingredients, instance)
-            
         if 'tags' in validated_data:
             instance.tags.set(validated_data['tags'])
-        print('updated validated_data inside update', validated_data)
-        data = super().update(instance, validated_data)
-        print('data inside update', instance.__dict__)
-        return data
+
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         return RecipeSerializer(instance, context=self.context).data
