@@ -1,7 +1,5 @@
 import base64
-import hashlib
 from django.contrib.auth import get_user_model
-from django.conf import settings
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer, UserCreateSerializer
@@ -108,7 +106,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('id', 'author', 'tags', 'ingredients',
+        fields = ('id', 'tags', 'author', 'ingredients',
                   'name', 'image', 'text', 'cooking_time')
 
     def validate(self, data):
@@ -175,14 +173,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
 
 class RecipeShortLinkSerializer(serializers.ModelSerializer):
-    short_link = serializers.SerializerMethodField()
-
     class Meta:
         model = Recipe
         fields = ('short_link',)
-
-    def get_short_link(self, obj):
-        if not obj.short_link:
-            hash_obj = hashlib.md5(f'recipe_{obj.pk}'.encode())
-            return f'{settings.BASE_URL}/r/{hash_obj.hexdigest()[:8]}'
-        return obj.short_link

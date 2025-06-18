@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from .utils import generate_short_link
+
 
 SLUG_MAX_LENGTH = 50
 NAME_MAX_LENGTH = 256

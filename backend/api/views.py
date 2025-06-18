@@ -1,8 +1,9 @@
+import hashlib
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import render, get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet as DjoserUserViewSet
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import RetrieveAPIView
@@ -72,5 +73,17 @@ class RecipeViewSet(ModelViewSet):
     @action(detail=True, url_path='get-link')
     def get_link(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=pk)
+        if recipe.short_link:
+            serializer = RecipeShortLinkSerializer(recipe)
+            return Response(serializer.data)
+        
+        # base_url = "https://foodgram.example.org/r/"
+        short_link = hashlib.md5(
+            f"{recipe.id}-{recipe.name}".encode()).hexdigest()[:8]
+        # short_url = base_url + short_hash
+        print(short_link)
+        recipe.short_link = short_link
+        recipe.save()
+
         serializer = RecipeShortLinkSerializer(recipe)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
