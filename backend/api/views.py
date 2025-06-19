@@ -13,9 +13,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from recipes.models import Ingredient, Recipe, Tag
+from recipes.models import Favorite, Ingredient, Recipe, Tag
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (
+    FavoriteRecipe,
     IngredientSerializer,
     RecipeSerializer,
     RecipeShortLinkSerializer,
@@ -76,7 +77,7 @@ class RecipeViewSet(ModelViewSet):
         if recipe.short_link:
             serializer = RecipeShortLinkSerializer(recipe)
             return Response(serializer.data)
-        
+
         # base_url = "https://foodgram.example.org/r/"
         short_link = hashlib.md5(
             f"{recipe.id}-{recipe.name}".encode()).hexdigest()[:8]
@@ -87,3 +88,22 @@ class RecipeViewSet(ModelViewSet):
 
         serializer = RecipeShortLinkSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
+    def favorite(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, id=pk)
+        user = request.user
+
+        if request.method == 'POST' or request.method == 'DELETE':
+            if Favorite.objects.filter(author=user, recipe=recipe).exists():
+                favorite = Favorite.objects.filter(author=user,
+                                                   recipe=recipe).first()
+                favorite.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+
+            Favorite.objects.create(author=user, recipe=recipe)
+            serializer = FavoriteRecipe(recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        
+

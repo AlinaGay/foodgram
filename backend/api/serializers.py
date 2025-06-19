@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
 
-from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import Favorite, Ingredient, Recipe, RecipeIngredient, Tag
 
 User = get_user_model()
 
@@ -98,7 +98,7 @@ class RecipeIngredientWriteSerializer(serializers.Serializer):
 
 # Основной Recipe сериализатор для записи
 class RecipeWriteSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = CustomUserSerializer(read_only=True)
     ingredients = RecipeIngredientWriteSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
@@ -176,3 +176,9 @@ class RecipeShortLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('short_link',)
+
+
+class FavoriteRecipe(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')

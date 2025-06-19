@@ -1,8 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from .utils import generate_short_link
-
 
 SLUG_MAX_LENGTH = 50
 NAME_MAX_LENGTH = 256
@@ -18,7 +16,8 @@ class User(AbstractUser):
     )
     first_name = models.CharField(max_length=NAME_MAX_LENGTH)
     last_name = models.CharField(max_length=NAME_MAX_LENGTH)
-    username = models.CharField(max_length=NAME_MAX_LENGTH, blank=True, null=True)
+    username = models.CharField(max_length=NAME_MAX_LENGTH,
+                                blank=True, null=True)
     role = models.CharField(
         max_length=max(len(role) for role, _ in ROLE_CHOICES),
         choices=ROLE_CHOICES,
@@ -84,3 +83,9 @@ class RecipeTag(models.Model):
                                blank=True, null=True)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL,
                             blank=True, null=True)
+
+
+class Favorite(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL,
+                               blank=True, null=True)
