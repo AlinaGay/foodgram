@@ -71,6 +71,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True
     )
+    is_favorited = serializers.SerializerMethodField()
     image = Base64ImageField()
 
     class Meta:
@@ -84,6 +85,12 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_ingredients(self, obj):
         ingredients = RecipeIngredient.objects.filter(recipe=obj)
         return RecipeIngredientSerializer(ingredients, many=True).data
+
+    def get_is_favorited(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return Favorite.objects.filter(author=user, recipe=obj).exists()
 
 
 # Ingredient (для записи ингредиентов)

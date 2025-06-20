@@ -104,6 +104,4 @@ class RecipeViewSet(ModelViewSet):
             Favorite.objects.create(author=user, recipe=recipe)
             serializer = FavoriteRecipe(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        
 
