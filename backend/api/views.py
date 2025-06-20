@@ -1,4 +1,5 @@
 import hashlib
+import json
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -56,12 +57,29 @@ class TagViewSet(CDLViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    queryset = Recipe.objects.all()
     pagination_class = LimitOffsetPagination
     filter_backends = (OrderingFilter,)
     ordering_fields = ('-pub_date',)
     permission_classes = (IsAuthorOrReadOnly,)
     serializer_class = RecipeSerializer
+
+    def get_queryset(self):
+        queryset = Recipe.objects.all()
+        request = self.request
+
+        tags = request.query_params.getlist('tags')
+        if tags:
+            queryset = queryset.filter(tags__slug__in=tags).distinct()
+
+        favorites = request.query_params.get('is_favorited')
+        if favorites not in (None, '0', 'false', 'False'):
+            user = request.user
+            if user.is_authenticated:
+                queryset = queryset.filter(favorite__author=user)
+            else:
+                queryset = queryset.none()
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
