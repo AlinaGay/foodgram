@@ -40,8 +40,8 @@ class User(AbstractUser):
 
 
 class Ingredient(models.Model):
-    name = models.CharField(max_length=NAME_MAX_LENGTH)
-    measurement_unit = models.CharField(max_length=16)
+    name = models.CharField(max_length=128)
+    measurement_unit = models.CharField(max_length=64)
 
 
 class Tag(models.Model):

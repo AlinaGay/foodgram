@@ -1,5 +1,4 @@
 import hashlib
-import json
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -9,8 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import ListModelMixin
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
@@ -34,7 +32,6 @@ class CDLViewSet(RetrieveAPIView, ListModelMixin, GenericViewSet):
 
 
 class IngredientViewSet(CDLViewSet):
-    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (SearchFilter,)
@@ -42,7 +39,7 @@ class IngredientViewSet(CDLViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Ingredient.objects.all()
         name = self.request.query_params.get('name')
         if name:
             queryset = queryset.filter(name__icontains=name)
@@ -57,7 +54,6 @@ class TagViewSet(CDLViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    pagination_class = LimitOffsetPagination
     filter_backends = (OrderingFilter,)
     ordering_fields = ('-pub_date',)
     permission_classes = (IsAuthorOrReadOnly,)
@@ -66,6 +62,10 @@ class RecipeViewSet(ModelViewSet):
     def get_queryset(self):
         queryset = Recipe.objects.all()
         request = self.request
+
+        author = request.query_params.get('author')
+        if author:
+            queryset = queryset.filter(author=author)
 
         tags = request.query_params.getlist('tags')
         if tags:
@@ -122,4 +122,3 @@ class RecipeViewSet(ModelViewSet):
             Favorite.objects.create(author=user, recipe=recipe)
             serializer = FavoriteRecipe(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
