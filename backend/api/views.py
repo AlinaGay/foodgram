@@ -63,23 +63,19 @@ class RecipeViewSet(ModelViewSet):
         queryset = Recipe.objects.all()
         request = self.request
 
-        author = request.query_params.get('author')
-        if author:
-            queryset = queryset.filter(author=author)
+        if self.action == 'list':
+            author = request.query_params.get('author')
+            if author:
+                queryset = queryset.filter(author=author)
 
-        tags = request.query_params.getlist('tags')
-        if tags:
+            favorites = request.query_params.get('is_favorited')
+            if favorites not in (None, '0', 'false', 'False'):
+                user = request.user
+                if user.is_authenticated:
+                    queryset = queryset.filter(favorite__author=user)
+
+            tags = request.query_params.getlist('tags')
             queryset = queryset.filter(tags__slug__in=tags).distinct()
-        else:
-            queryset = queryset.none()
-
-        favorites = request.query_params.get('is_favorited')
-        if favorites not in (None, '0', 'false', 'False'):
-            user = request.user
-            if user.is_authenticated:
-                queryset = queryset.filter(favorite__author=user)
-            else:
-                queryset = queryset.none()
 
         return queryset
 
