@@ -33,7 +33,7 @@ class CDLViewSet(RetrieveAPIView, ListModelMixin, GenericViewSet):
 
 class IngredientViewSet(CDLViewSet):
     serializer_class = IngredientSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (AllowAny,)
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
     pagination_class = None
@@ -49,7 +49,7 @@ class IngredientViewSet(CDLViewSet):
 class TagViewSet(CDLViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (AllowAny,)
     pagination_class = None
 
 
@@ -70,6 +70,8 @@ class RecipeViewSet(ModelViewSet):
         tags = request.query_params.getlist('tags')
         if tags:
             queryset = queryset.filter(tags__slug__in=tags).distinct()
+        else:
+            queryset = queryset.none()
 
         favorites = request.query_params.get('is_favorited')
         if favorites not in (None, '0', 'false', 'False'):
