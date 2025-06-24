@@ -120,3 +120,22 @@ class RecipeViewSet(ModelViewSet):
             Favorite.objects.create(author=user, recipe=recipe)
             serializer = FavoriteRecipe(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+    @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
+    def shopping_cart(self, request, pk=None):
+        session = request.session
+        cart = session.get('shopping_cart', [])
+        recipe_id = int(pk)
+
+        if request.method == 'POST':
+            if recipe_id not in cart:
+                cart.append(recipe_id)
+
+        else:
+            if recipe_id in cart:
+                cart.remove(recipe_id)
+
+        session['shopping_cart'] = cart
+        session.modified = True
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
