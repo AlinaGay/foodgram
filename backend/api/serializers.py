@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
 
-from recipes.models import Favorite, Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
 
 User = get_user_model()
 
@@ -71,6 +71,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         read_only=True
     )
     is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField()
 
     class Meta:
@@ -87,9 +88,15 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
-        if user.is_anonymous:
+        if not user.is_authenticated:
             return False
         return Favorite.objects.filter(author=user, recipe=obj).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        user = self.context.get('request').user
+        if not user.is_authenticated:
+            return False
+        return ShoppingCart.objects.filter(author=user, recipe=obj).exists()
 
 
 # Ingredient (для записи ингредиентов)
@@ -194,6 +201,12 @@ class RecipeShortLinkSerializer(serializers.ModelSerializer):
 
 
 class FavoriteRecipe(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class ShoppingCartRecipe(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
