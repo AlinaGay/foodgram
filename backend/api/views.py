@@ -2,7 +2,7 @@ import hashlib
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, get_list_or_404
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -120,7 +120,7 @@ class RecipeViewSet(ModelViewSet):
             Favorite.objects.create(author=user, recipe=recipe)
             serializer = FavoriteRecipe(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
     def shopping_cart(self, request, pk=None):
         session = request.session
@@ -139,3 +139,12 @@ class RecipeViewSet(ModelViewSet):
         session.modified = True
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=False, methods=['get'], url_path='download_shopping_cart')
+    def download_shopping_cart(self, request):
+        cart = request.session.get('shopping_cart', [])
+        recipes = get_list_or_404(Recipe, id__in=cart)
+
+        serializer = RecipeSerializer(recipes, many=True,
+                                      context={'request': request})
+        return Response(serializer.data)
