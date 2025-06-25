@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from recipes.models import Favorite, Ingredient, Recipe, Tag
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (
     FavoriteRecipe,
@@ -20,6 +20,7 @@ from .serializers import (
     RecipeSerializer,
     RecipeShortLinkSerializer,
     RecipeWriteSerializer,
+    ShoppingCartRecipe,
     TagSerializer
 )
 
@@ -74,8 +75,15 @@ class RecipeViewSet(ModelViewSet):
                 if user.is_authenticated:
                     queryset = queryset.filter(favorite__author=user)
 
+            in_cart = request.query_params.get('is_in_shopping_cart')
+            if in_cart not in (None, '0', 'false', 'False'):
+                user = request.user
+                if user.is_authenticated:
+                    queryset = queryset.filter(shoppingcart__author=user)
+
             tags = request.query_params.getlist('tags')
-            queryset = queryset.filter(tags__slug__in=tags).distinct()
+            if tags:
+                queryset = queryset.filter(tags__slug__in=tags).distinct()
 
         return queryset
 
@@ -123,28 +131,37 @@ class RecipeViewSet(ModelViewSet):
 
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
     def shopping_cart(self, request, pk=None):
-        session = request.session
-        cart = session.get('shopping_cart', [])
-        recipe_id = int(pk)
+        recipe = get_object_or_404(Recipe, id=pk)
+        user = request.user
 
         if request.method == 'POST':
-            if recipe_id not in cart:
-                cart.append(recipe_id)
+            obj, created = ShoppingCart.objects.get_or_create(author=user,
+                                                              recipe=recipe)
+            if not created:
+                return Response({'detail': 'Рецепт уже в списке покупок'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            serializer = ShoppingCartRecipe(recipe)
 
-        else:
-            if recipe_id in cart:
-                cart.remove(recipe_id)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        session['shopping_cart'] = cart
-        session.modified = True
+        if request.method == 'DELETE':
+            deleted, _ = ShoppingCart.objects.filter(author=user,
+                                                     recipe=recipe).delete()
+            if deleted == 0:
+                return Response(
+                    {'detail': 'Рецепта не было в списке покупок.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=False, methods=['get'], url_path='download_shopping_cart')
     def download_shopping_cart(self, request):
-        cart = request.session.get('shopping_cart', [])
-        recipes = get_list_or_404(Recipe, id__in=cart)
-
+        user = request.user
+        shopping_cart = ShoppingCart.objects.filter(author=user)
+        recipes = Recipe.objects.filter(
+            id__in=shopping_cart.values_list('recipe_id', flat=True)
+        )
         serializer = RecipeSerializer(recipes, many=True,
                                       context={'request': request})
         return Response(serializer.data)

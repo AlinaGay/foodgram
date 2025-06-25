@@ -91,7 +91,7 @@ class Favorite(models.Model):
                                blank=True, null=True)
 
 
-class ShoppinCart(models.Model):
+class ShoppingCart(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL,
                                blank=True, null=True)
