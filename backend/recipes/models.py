@@ -95,3 +95,21 @@ class ShoppingCart(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL,
                                blank=True, null=True)
+    
+
+class Follower(models.Model):
+    # тот, кто подписывается
+    follower = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following'       # user.following → все записи, где user — follower
+    )
+    # на кого подписываются
+    followed = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='followers'       # user.followers → все записи, где user — followed
+    )
+
+    class Meta:
+        unique_together = ('follower', 'followed')
