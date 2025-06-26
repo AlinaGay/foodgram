@@ -34,6 +34,9 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+    class Meta:
+        ordering = ['id']
+
     @property
     def is_admin(self):
         return self.role == self.ADMIN or self.is_superuser
@@ -95,20 +98,18 @@ class ShoppingCart(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL,
                                blank=True, null=True)
-    
+
 
 class Follower(models.Model):
-    # тот, кто подписывается
     follower = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='following'       # user.following → все записи, где user — follower
+        related_name='following'
     )
-    # на кого подписываются
     followed = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='followers'       # user.followers → все записи, где user — followed
+        related_name='followers'
     )
 
     class Meta:

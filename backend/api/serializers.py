@@ -17,6 +17,16 @@ from recipes.models import (
 User = get_user_model()
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super().to_internal_value(data)
+
+
 class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = User
@@ -31,17 +41,6 @@ class CustomUserSerializer(UserSerializer):
         fields = ('id', 'email', 'username',
                   'first_name', 'last_name', 'is_subscribed', 'avatar')
         read_only_fields = ('id', 'email')
-
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
-        return super().to_internal_value(data)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -223,8 +222,8 @@ class DownloadShoppingCart(serializers.Serializer):
 
 class FollowerSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
-    recipes = ShortRecipe(read_only=True, many=True)
-    recipes_count = serializers.IntegerField(read_only=True)
+    recipes = ShortRecipe(source='recipe_set', read_only=True, many=True)
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
         model = User
@@ -239,3 +238,6 @@ class FollowerSerializer(UserSerializer):
         if not user.is_authenticated:
             return False
         return Follower.objects.filter(followed=obj, follower=user).exists()
+
+    def get_recipes_count(self, obj):
+        return obj.recipe_set.count()

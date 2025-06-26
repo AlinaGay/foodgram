@@ -156,12 +156,19 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
+    'VIEWS': {
+        'user': 'api.views.CustomUserViewSet',
+        'user_list': 'api.views.CustomUserViewSet',
+        'current_user': 'api.views.CustomUserViewSet',
+    },
+
     'PERMISSIONS': {
         'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
         'user_list': ['rest_framework.permissions.IsAdminUser'],
         'user_create': ['rest_framework.permissions.AllowAny'],
         'current_user': ['rest_framework.permissions.IsAuthenticated'],
     },
+
     'SERIALIZERS': {
         'user_create': 'api.serializers.CustomUserCreateSerializer',
         'user': 'api.serializers.CustomUserSerializer',

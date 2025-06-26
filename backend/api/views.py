@@ -2,16 +2,16 @@ import hashlib
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import F, Sum
+from django.db.models import Count, F, Sum
 from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404, get_list_or_404
+from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import ListModelMixin
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
@@ -24,9 +24,11 @@ from recipes.models import (
     ShoppingCart,
     Tag
 )
-from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (
+    AvatarSerializer,
     DownloadShoppingCart,
+    FollowerSerializer,
     IngredientSerializer,
     RecipeSerializer,
     RecipeShortLinkSerializer,
@@ -40,23 +42,56 @@ User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
-    @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
-    def subscribe(self, request, pk=None):
-        followed = get_object_or_404(User, id=pk)
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        url_path='subscribe',
+        permission_classes=(IsAuthenticated,)
+    )
+    def subscribe(self, request, id=None):
+        followed = get_object_or_404(User, pk=id)
         follower = request.user
 
-        if request.method == 'POST' or request.method == 'DELETE':
-            if Follower.objects.filter(
-                follower=follower, followed=followed
-            ).exists():
-                subscription = Follower.objects.filter(
-                    follower=follower, followed=followed).first()
-                subscription.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
+        if follower == followed:
+            return Response(
+                {'detail': 'Нельзя подписаться на самого себя.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-            Follower.objects.create(follower=follower, followed=followed)
-            serializer = FavoriteRecipe(recipe)
+        if request.method == 'POST':
+            Follower.objects.get_or_create(
+                follower=follower,
+                followed=followed
+            )
+            serializer = FollowerSerializer(
+                followed,
+                context={'request': request}
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            Follower.objects.filter(
+                follower=follower, followed=followed).delete()
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='subscriptions',
+        permission_classes=(IsAuthenticated,)
+    )
+    def subscriptions(self, request):
+        subscriptions = User.objects.filter(followers__follower=request.user)
+        page = self.paginate_queryset(subscriptions)
+        serializer = FollowerSerializer(
+            page if page is not None else subscriptions,
+            many=True,
+            context={'request': request}
+        )
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CDLViewSet(RetrieveAPIView, ListModelMixin, GenericViewSet):
