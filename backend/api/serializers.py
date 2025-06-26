@@ -43,6 +43,14 @@ class CustomUserSerializer(UserSerializer):
         read_only_fields = ('id', 'email')
 
 
+class AvatarSerializer(serializers.ModelSerializer):
+    avatar = Base64ImageField()
+
+    class Meta:
+        model = User
+        fields = ('avatar',)
+
+
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag

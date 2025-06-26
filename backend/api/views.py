@@ -92,6 +92,39 @@ class CustomUserViewSet(UserViewSet):
         if page is not None:
             return self.get_paginated_response(serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+@action(
+    detail=False,
+    methods=['put', 'delete'],
+    url_path='me/avatar',
+    permission_classes=(IsAuthenticated,)
+)
+def add_avatar(self, request, id=None):
+    user = request.user
+
+    if request.method == 'PUT':
+        serializer = AvatarSerializer(
+            instance=user,
+            data=request.data,
+            partial=True,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
+
+    if request.method == 'DELETE':
+        if user.avatar:
+            user.avatar.delete(save=False)
+
+        user.avatar = None
+        user.save(update_fields=['avatar'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
 
 
 class CDLViewSet(RetrieveAPIView, ListModelMixin, GenericViewSet):
