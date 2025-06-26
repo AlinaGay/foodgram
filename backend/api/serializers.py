@@ -4,7 +4,15 @@ from django.core.files.base import ContentFile
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
 
-from recipes.models import Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
+from recipes.models import (
+    Favorite,
+    Follower,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag
+)
 
 User = get_user_model()
 
@@ -23,6 +31,7 @@ class CustomUserSerializer(UserSerializer):
         fields = ('id', 'email', 'username',
                   'first_name', 'last_name', 'is_subscribed', 'avatar')
         read_only_fields = ('id', 'email')
+
 
 
 class Base64ImageField(serializers.ImageField):
@@ -200,13 +209,7 @@ class RecipeShortLinkSerializer(serializers.ModelSerializer):
         return data
 
 
-class FavoriteRecipe(serializers.ModelSerializer):
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
-
-
-class ShoppingCartRecipe(serializers.ModelSerializer):
+class ShortRecipe(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
@@ -216,3 +219,23 @@ class DownloadShoppingCart(serializers.Serializer):
     name = serializers.CharField()
     total_amount = serializers.FloatField()
     measurement_unit = serializers.CharField()
+
+
+class FollowerSerializer(UserSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = ShortRecipe(read_only=True, many=True)
+    recipes_count = serializers.IntegerField(read_only=True)
+
+    class Meta(UserSerializer.Meta):
+        model = User
+        fields = ('id', 'email', 'username',
+                  'first_name', 'last_name',
+                  'is_subscribed', 'recipes',
+                  'recipes_count', 'avatar')
+        read_only_fields = ('id', 'email')
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        if not user.is_authenticated:
+            return False
+        return Follower.objects.filter(followed=obj, follower=user).exists()

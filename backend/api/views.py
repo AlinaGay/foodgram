@@ -15,21 +15,48 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from recipes.models import Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
+from recipes.models import (
+    Favorite,
+    Follower,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag
+)
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (
     DownloadShoppingCart,
-    FavoriteRecipe,
     IngredientSerializer,
     RecipeSerializer,
     RecipeShortLinkSerializer,
     RecipeWriteSerializer,
-    ShoppingCartRecipe,
+    ShortRecipe,
     TagSerializer
 )
 
 
 User = get_user_model()
+
+
+class CustomUserViewSet(UserViewSet):
+    @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
+    def subscribe(self, request, pk=None):
+        followed = get_object_or_404(User, id=pk)
+        follower = request.user
+
+        if request.method == 'POST' or request.method == 'DELETE':
+            if Follower.objects.filter(
+                follower=follower, followed=followed
+            ).exists():
+                subscription = Follower.objects.filter(
+                    follower=follower, followed=followed).first()
+                subscription.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+
+            Follower.objects.create(follower=follower, followed=followed)
+            serializer = FavoriteRecipe(recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CDLViewSet(RetrieveAPIView, ListModelMixin, GenericViewSet):
@@ -143,7 +170,7 @@ class RecipeViewSet(ModelViewSet):
                 return Response(status=status.HTTP_204_NO_CONTENT)
 
             Favorite.objects.create(author=user, recipe=recipe)
-            serializer = FavoriteRecipe(recipe)
+            serializer = ShortRecipe(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
@@ -157,7 +184,7 @@ class RecipeViewSet(ModelViewSet):
             if not created:
                 return Response({'detail': 'Рецепт уже в списке покупок'},
                                 status=status.HTTP_400_BAD_REQUEST)
-            serializer = ShoppingCartRecipe(recipe)
+            serializer = ShortRecipe(recipe)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
