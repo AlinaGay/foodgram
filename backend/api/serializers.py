@@ -210,3 +210,9 @@ class ShoppingCartRecipe(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class DownloadShoppingCart(serializers.Serializer):
+    name = serializers.CharField()
+    total_amount = serializers.FloatField()
+    measurement_unit = serializers.CharField()
