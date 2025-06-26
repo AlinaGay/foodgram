@@ -2,7 +2,10 @@ import hashlib
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import F, Sum
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, get_list_or_404
+from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -12,9 +15,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (
+    DownloadShoppingCart,
     FavoriteRecipe,
     IngredientSerializer,
     RecipeSerializer,
@@ -80,6 +84,13 @@ class RecipeViewSet(ModelViewSet):
                 queryset = queryset.filter(favorite__author=user)
                 applied = True
 
+            tags = request.query_params.getlist('tags')
+            if tags:
+                queryset = queryset.filter(tags__slug__in=tags).distinct()
+                applied = True
+            else:
+                applied = False
+
             in_cart = request.query_params.get('is_in_shopping_cart')
             if (
                 in_cart not in (None, '0', 'false', 'False')
@@ -87,13 +98,6 @@ class RecipeViewSet(ModelViewSet):
             ):
                 queryset = queryset.filter(shoppingcart__author=user)
                 applied = True
-
-            tags = request.query_params.getlist('tags')
-            if tags:
-                queryset = queryset.filter(tags__slug__in=tags).distinct()
-                applied = True
-            else:
-                applied = False
 
             if not applied:
                 return queryset.none()
@@ -175,6 +179,27 @@ class RecipeViewSet(ModelViewSet):
         recipes = Recipe.objects.filter(
             id__in=shopping_cart.values_list('recipe_id', flat=True)
         )
-        serializer = RecipeSerializer(recipes, many=True,
-                                      context={'request': request})
-        return Response(serializer.data)
+        ingredients = (
+            RecipeIngredient.objects.filter(recipe__in=recipes)
+            .values(
+                name=F('ingredient__name'),
+                measurement_unit=F('ingredient__measurement_unit')
+            )
+            .annotate(total_amount=Sum('amount'))
+            .order_by('name')
+        )
+
+        serializer = DownloadShoppingCart(ingredients, many=True)
+        lines = [
+            (
+                f"- {item['name']} {item['total_amount']} "
+                f"{item['measurement_unit']}"
+            )
+            for item in serializer.data
+        ]
+
+        response = HttpResponse("\n".join(lines), content_type="text/plain")
+        response["Content-Disposition"] = (
+            "attachment; filename=ingredients.txt"
+        )
+        return response
