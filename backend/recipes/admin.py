@@ -38,7 +38,15 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+class IngredientAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'measurement_unit'
+    )
+    search_fields = ('name',)
+
+
 admin.site.register(User, UserAdmin)
-admin.site.register(Ingredient)
+admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Recipe, RecipeAdmin)
