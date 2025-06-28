@@ -11,12 +11,7 @@ class UserAdmin(admin.ModelAdmin):
         'email'
     )
 
-    list_iditable = (
-        'last_name',
-        'first_name',
-        'email'
-    )
-
+    list_editable = ('email',)
     search_fields = ('last_name',)
     list_filter = ('role',)
 
@@ -27,17 +22,23 @@ class TagAdmin(admin.ModelAdmin):
         'slug'
     )
 
-    list_iditable = (
-        'title',
-        'slug'
+    list_editable = ('slug',)
+    search_fields = ('name',)
+
+
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'author',
+        'text',
+        'cooking_time'
     )
 
+    list_editable = ('text',)
     search_fields = ('name',)
-    list_filter = ('name',)
-    list_display_links = ('name',)
 
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Ingredient)
 admin.site.register(Tag, TagAdmin)
-admin.site.register(Recipe)
+admin.site.register(Recipe, RecipeAdmin)
