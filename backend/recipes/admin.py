@@ -3,6 +3,16 @@ from django.contrib import admin
 from .models import User, Ingredient, Tag, Recipe
 
 
+@admin.action(description='Заблокировать выбранных пользователей')
+def block_users(modeladmin, request, queryset):
+    queryset.update(is_active=False)
+
+
+@admin.action(description='Разблокировать выбранных пользователей')
+def unblock_users(modeladmin, request, queryset):
+    queryset.update(is_active=True)
+
+
 class UserAdmin(admin.ModelAdmin):
     list_display = (
         'last_name',
@@ -13,7 +23,8 @@ class UserAdmin(admin.ModelAdmin):
 
     list_editable = ('email',)
     search_fields = ('last_name',)
-    list_filter = ('role',)
+    list_filter = ('is_active', 'is_staff', 'is_superuser')
+    actions = (block_users, unblock_users)
 
 
 class TagAdmin(admin.ModelAdmin):
