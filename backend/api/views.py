@@ -203,7 +203,7 @@ class RecipeViewSet(ModelViewSet):
             return RecipeSerializer
         return RecipeWriteSerializer
 
-    @action(detail=True, url_path='get-link')
+    @action(detail=True, url_path='get-link', permission_classes=(AllowAny,))
     def get_link(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=pk)
         if recipe.short_link:
@@ -221,7 +221,12 @@ class RecipeViewSet(ModelViewSet):
         serializer = RecipeShortLinkSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        url_path='favorite',
+        permission_classes=(IsAuthenticated,)
+    )
     def favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=pk)
         user = request.user
@@ -237,7 +242,12 @@ class RecipeViewSet(ModelViewSet):
             serializer = ShortRecipe(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        url_path='shopping_cart',
+        permission_classes=(IsAuthenticated,)
+    )
     def shopping_cart(self, request, pk=None):
         recipe = get_object_or_404(Recipe, id=pk)
         user = request.user
@@ -263,7 +273,12 @@ class RecipeViewSet(ModelViewSet):
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['get'], url_path='download_shopping_cart')
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='download_shopping_cart',
+        permission_classes=(IsAuthenticated,)
+    )
     def download_shopping_cart(self, request):
         user = request.user
         shopping_cart = ShoppingCart.objects.filter(author=user)
