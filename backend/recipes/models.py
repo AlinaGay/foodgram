@@ -1,9 +1,21 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
 
-SLUG_MAX_LENGTH = 50
-NAME_MAX_LENGTH = 256
+# User
+USER_NAME_MAX_LENGTH = 150
+USER_EMAIL_MAX_LENGTH = 254
+
+# Ingredient
+INGREDIENT_NAME_MAX_LENGTH = 128
+INGREDIENT_MESUREMENT_MAX_LENGTH = 64
+
+# Tag
+TAG_MAX_LENGTH = 32
+
+# Recipe
+RECIPE_NAME_MAX_LENGTH = 256
 
 
 class User(AbstractUser):
@@ -14,16 +26,16 @@ class User(AbstractUser):
         (ADMIN, 'Администратор'),
         (USER, 'Пользователь')
     )
-    first_name = models.CharField(max_length=NAME_MAX_LENGTH)
-    last_name = models.CharField(max_length=NAME_MAX_LENGTH)
-    username = models.CharField(max_length=NAME_MAX_LENGTH,
+    first_name = models.CharField(max_length=USER_NAME_MAX_LENGTH)
+    last_name = models.CharField(max_length=USER_NAME_MAX_LENGTH)
+    username = models.CharField(max_length=USER_NAME_MAX_LENGTH,
                                 blank=True, null=True)
     role = models.CharField(
         max_length=max(len(role) for role, _ in ROLE_CHOICES),
         choices=ROLE_CHOICES,
         default=USER
     )
-    email = models.EmailField(unique=True)
+    email = models.EmailField(max_length=USER_EMAIL_MAX_LENGTH, unique=True)
     is_subscribed = models.BooleanField(default=False)
     avatar = models.ImageField(
         upload_to='users/avatars/',
@@ -43,13 +55,26 @@ class User(AbstractUser):
 
 
 class Ingredient(models.Model):
-    name = models.CharField(max_length=128)
-    measurement_unit = models.CharField(max_length=64)
+    name = models.CharField(max_length=INGREDIENT_NAME_MAX_LENGTH)
+    measurement_unit = models.CharField(
+        max_length=INGREDIENT_MESUREMENT_MAX_LENGTH)
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=NAME_MAX_LENGTH)
-    slug = models.SlugField(max_length=SLUG_MAX_LENGTH, unique=True)
+    name = models.CharField(max_length=TAG_MAX_LENGTH)
+    slug = models.SlugField(
+        max_length=TAG_MAX_LENGTH,
+        unique=True,
+        null=True,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[-a-zA-Z0-9_]+$',
+                message=('Слаг может содержать только буквы,',
+                         'цифры, дефис и нижнее подчёркивание.')
+            )
+        ]
+    )
 
 
 class Recipe(models.Model):
@@ -62,14 +87,17 @@ class Recipe(models.Model):
                                                          'ingredient'))
     is_favorited = models.BooleanField(default=False)
     is_in_shopping_cart = models.BooleanField(default=False)
-    name = models.CharField(max_length=NAME_MAX_LENGTH)
+    name = models.CharField(max_length=RECIPE_NAME_MAX_LENGTH, blank=False)
     image = models.ImageField(
         upload_to='recipes/images/',
-        null=True,
-        default=None
+        blank=True,
+        null=True
     )
-    text = models.TextField()
-    cooking_time = models.PositiveIntegerField()
+    text = models.TextField(blank=False)
+    cooking_time = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="Время приготовления (в минутах), целое число ≥ 1."
+    )
     short_link = models.URLField(null=True, blank=True)
 
 
