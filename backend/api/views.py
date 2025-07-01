@@ -3,6 +3,7 @@ import hashlib
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Count, F, Sum
+from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
@@ -15,6 +16,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
+from .filters import RecipeFilter
 from recipes.models import (
     Favorite,
     Follower,
@@ -150,50 +152,12 @@ class TagViewSet(CDLViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    filter_backends = (OrderingFilter,)
+    queryset = Recipe.objects.all()
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filterset_class = RecipeFilter
     ordering_fields = ('-pub_date',)
     permission_classes = (IsAuthorOrReadOnly,)
     serializer_class = RecipeSerializer
-
-    def get_queryset(self):
-        queryset = Recipe.objects.all()
-        request = self.request
-        user = request.user
-        applied = False
-
-        if self.action == 'list':
-            author = request.query_params.get('author')
-            if author:
-                queryset = queryset.filter(author=author)
-                applied = True
-
-            favorites = request.query_params.get('is_favorited')
-            if (
-                favorites not in (None, '0', 'false', 'False')
-                and request.user.is_authenticated
-            ):
-                queryset = queryset.filter(favorite__author=user)
-                applied = True
-
-            tags = request.query_params.getlist('tags')
-            if tags:
-                queryset = queryset.filter(tags__slug__in=tags).distinct()
-                applied = True
-            else:
-                applied = False
-
-            in_cart = request.query_params.get('is_in_shopping_cart')
-            if (
-                in_cart not in (None, '0', 'false', 'False')
-                and request.user.is_authenticated
-            ):
-                queryset = queryset.filter(shoppingcart__author=user)
-                applied = True
-
-            if not applied:
-                return queryset.none()
-
-        return queryset
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
