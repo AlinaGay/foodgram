@@ -43,7 +43,17 @@ from .serializers import (
 User = get_user_model()
 
 
-class CustomUserViewSet(UserViewSet):
+class PaginateMixin:
+    def paginate_and_respond(self, queryset, serializer_class, **kwargs):
+        page = self.paginate_queryset(queryset)
+        to_ser = page if page is not None else queryset
+        serializer = serializer_class(
+            to_ser, many=True, context={'request': self.request}, **kwargs)
+        return self.get_paginated_response(
+            serializer.data) if page is not None else Response(serializer.data)
+
+
+class CustomUserViewSet(PaginateMixin, UserViewSet):
     @action(
         detail=True,
         methods=['post', 'delete'],
@@ -84,16 +94,10 @@ class CustomUserViewSet(UserViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def subscriptions(self, request):
-        subscriptions = User.objects.filter(followers__follower=request.user)
-        page = self.paginate_queryset(subscriptions)
-        serializer = FollowerSerializer(
-            page if page is not None else subscriptions,
-            many=True,
-            context={'request': request}
+        return self.paginate_and_respond(
+            User.objects.filter(followers__follower=request.user),
+            FollowerSerializer
         )
-        if page is not None:
-            return self.get_paginated_response(serializer.data)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=False,
