@@ -11,7 +11,7 @@ class Command(BaseCommand):
     help = 'Import ingredients from data/ingredients.csv'
 
     def handle(self, *args, **options):
-        file_path = '/Users/alina/Dev/foodgram/data/ingredients.csv'
+        file_path = '/app/data/ingredients.csv'
         if not os.path.exists(file_path):
             self.stderr.write(f'File {file_path} is not found.')
             return
