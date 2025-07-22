@@ -17,7 +17,7 @@ services:
       - backend-network
     restart: unless-stopped
   backend:
-    image: username/foodgram_backend
+    image: alinagay/foodgram_backend
     env_file: .env
     command: >
       sh -c "python manage.py collectstatic --noinput
@@ -32,7 +32,7 @@ services:
       - backend-network
     restart: unless-stopped 
   frontend:
-    image: username/taski_frontend
+    image: alinagay/foodgram_frontend
     env_file: .env
     container_name: foodgram-front
     command: sh -c "npm run build && cp -r /app/build/. /frontend_static/ && tail -f /dev/null"
