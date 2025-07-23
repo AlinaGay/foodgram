@@ -222,11 +222,10 @@ class RecipeViewSet(ModelViewSet):
             serializer = RecipeShortLinkSerializer(recipe)
             return Response(serializer.data)
 
-        # base_url = "https://foodgram.example.org/r/"
-        short_link = hashlib.md5(
+        base_url = "https://foodgram-site.zapto.org/"
+        short_hash = hashlib.md5(
             f"{recipe.id}-{recipe.name}".encode()).hexdigest()[:8]
-        # short_url = base_url + short_hash
-        print(short_link)
+        short_link = base_url + short_hash
         recipe.short_link = short_link
         recipe.save()
 
