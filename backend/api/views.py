@@ -1,8 +1,14 @@
+"""
+Views for Foodgram API.
+
+This module contains viewsets and actions for users,
+ingredients, tags, recipes, favorites, and shopping cart.
+"""
+
 import hashlib
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Count, F, Sum
+from django.db.models import F, Sum
 from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -44,7 +50,18 @@ User = get_user_model()
 
 
 class PaginateMixin:
+    """Mixin for paginating queryset and returning paginated response."""
+
     def paginate_and_respond(self, queryset, serializer_class, **kwargs):
+        """
+        Paginate the given queryset.
+
+        It returns a paginated response using
+        the specified serializer.
+
+        If pagination is not applied, return
+        a regular response with serialized data.
+        """
         page = self.paginate_queryset(queryset)
         to_ser = page if page is not None else queryset
         serializer = serializer_class(
@@ -54,6 +71,8 @@ class PaginateMixin:
 
 
 class CustomUserViewSet(PaginateMixin, UserViewSet):
+    """ViewSet for user actions: subscribe, subscriptions, avatar."""
+
     @action(
         detail=True,
         methods=['post', 'delete'],
@@ -61,6 +80,12 @@ class CustomUserViewSet(PaginateMixin, UserViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def subscribe(self, request, id=None):
+        """
+        Subscribe or unsubscribe the authenticated user to another user.
+
+        POST: Subscribe to the user with the given id.
+        DELETE: Unsubscribe from the user with the given id.
+        """
         followed = get_object_or_404(User, pk=id)
         follower = request.user
 
@@ -94,6 +119,7 @@ class CustomUserViewSet(PaginateMixin, UserViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def subscriptions(self, request):
+        """Return a paginated list of users."""
         return self.paginate_and_respond(
             User.objects.filter(followers__follower=request.user),
             FollowerSerializer
@@ -106,6 +132,12 @@ class CustomUserViewSet(PaginateMixin, UserViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def add_avatar(self, request, id=None):
+        """
+        Add or remove an avatar for the authenticated user.
+
+        PUT: Update the user's avatar.
+        DELETE: Remove the user's avatar.
+        """
         user = request.user
 
         if request.method == 'PUT':
@@ -130,10 +162,14 @@ class CustomUserViewSet(PaginateMixin, UserViewSet):
 
 
 class CDLViewSet(RetrieveAPIView, ListModelMixin, GenericViewSet):
+    """Base viewset for read-only models."""
+
     pass
 
 
 class IngredientViewSet(CDLViewSet):
+    """ViewSet for listing and searching ingredients."""
+
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     filter_backends = (SearchFilter,)
@@ -141,6 +177,7 @@ class IngredientViewSet(CDLViewSet):
     pagination_class = None
 
     def get_queryset(self):
+        """Optionally filter ingredients by name using query parameters."""
         queryset = Ingredient.objects.all()
         name = self.request.query_params.get('name')
         if name:
@@ -149,6 +186,8 @@ class IngredientViewSet(CDLViewSet):
 
 
 class TagViewSet(CDLViewSet):
+    """ViewSet for listing tags."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
@@ -156,6 +195,8 @@ class TagViewSet(CDLViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
+    """ViewSet for CRUD operations on recipes."""
+
     queryset = Recipe.objects.all()
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_class = RecipeFilter
@@ -164,15 +205,18 @@ class RecipeViewSet(ModelViewSet):
     serializer_class = RecipeSerializer
 
     def perform_create(self, serializer):
+        """Save a new recipe with the authenticated user as the author."""
         serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
+        """Return the appropriate serializer class depending on the action."""
         if self.action in ('list', 'retrieve'):
             return RecipeSerializer
         return RecipeWriteSerializer
 
     @action(detail=True, url_path='get-link', permission_classes=(AllowAny,))
     def get_link(self, request, pk=None):
+        """Generate and return a short link for the specified recipe."""
         recipe = get_object_or_404(Recipe, id=pk)
         if recipe.short_link:
             serializer = RecipeShortLinkSerializer(recipe)
@@ -196,6 +240,7 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def favorite(self, request, pk=None):
+        """Add or remove the specified recipe from."""
         recipe = get_object_or_404(Recipe, id=pk)
         user = request.user
 
@@ -217,6 +262,7 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def shopping_cart(self, request, pk=None):
+        """Add or remove the specified recipe."""
         recipe = get_object_or_404(Recipe, id=pk)
         user = request.user
 
@@ -248,6 +294,7 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
+        """Download the authenticated user's shopping cart."""
         user = request.user
         shopping_cart = ShoppingCart.objects.filter(author=user)
         recipes = Recipe.objects.filter(
