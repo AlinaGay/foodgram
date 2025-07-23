@@ -1,3 +1,10 @@
+"""
+Models for the Foodgram project.
+
+Defines custom user, ingredient, tag, recipe,
+favorite, shopping cart, and follower models.
+"""
+
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
@@ -19,6 +26,8 @@ RECIPE_NAME_MAX_LENGTH = 256
 
 
 class User(AbstractUser):
+    """Custom user model for Foodgram."""
+
     USER = 'user'
     ADMIN = 'admin'
 
@@ -47,20 +56,27 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     class Meta:
+        """Meta class for User model."""
+
         ordering = ['id']
 
     @property
     def is_admin(self):
+        """Return True if user is admin or superuser."""
         return self.role == self.ADMIN or self.is_superuser
 
 
 class Ingredient(models.Model):
+    """Model for ingredients."""
+
     name = models.CharField(max_length=INGREDIENT_NAME_MAX_LENGTH)
     measurement_unit = models.CharField(
         max_length=INGREDIENT_MESUREMENT_MAX_LENGTH)
 
 
 class Tag(models.Model):
+    """Model for tags."""
+
     name = models.CharField(max_length=TAG_MAX_LENGTH)
     slug = models.SlugField(
         max_length=TAG_MAX_LENGTH,
@@ -77,10 +93,13 @@ class Tag(models.Model):
     )
 
     def __str__(self):
+        """Return string representation of the tag."""
         return self.name
 
 
 class Recipe(models.Model):
+    """Model for recipes."""
+
     tags = models.ManyToManyField(Tag, through='RecipeTag',
                                   through_fields=('recipe', 'tag'))
     author = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -105,6 +124,8 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
+    """Model for ingredients in a recipe."""
+
     recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL,
                                blank=True, null=True)
     ingredient = models.ForeignKey(Ingredient, on_delete=models.SET_NULL,
@@ -113,6 +134,8 @@ class RecipeIngredient(models.Model):
 
 
 class RecipeTag(models.Model):
+    """Model for tags in a recipe."""
+
     recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL,
                                blank=True, null=True)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL,
@@ -120,18 +143,24 @@ class RecipeTag(models.Model):
 
 
 class Favorite(models.Model):
+    """Model for user's favorite recipes."""
+
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL,
                                blank=True, null=True)
 
 
 class ShoppingCart(models.Model):
+    """Model for user's shopping cart."""
+
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL,
                                blank=True, null=True)
 
 
 class Follower(models.Model):
+    """Model for user subscriptions."""
+
     follower = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -144,4 +173,6 @@ class Follower(models.Model):
     )
 
     class Meta:
+        """Meta class for Follower model."""
+
         unique_together = ('follower', 'followed')
