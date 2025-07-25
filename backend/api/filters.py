@@ -8,7 +8,6 @@ including filtering by author, tags, favorites, and shopping cart.
 from django_filters.rest_framework import (BooleanFilter, FilterSet,
                                            ModelMultipleChoiceFilter,
                                            NumberFilter)
-
 from recipes.models import Recipe, Tag
 
 
