@@ -1,7 +1,8 @@
 """
 URL configuration for Foodgram API.
 
-Defines routes for users, ingredients, tags, recipes, and authentication endpoints.
+Defines routes for users, ingredients, tags, recipes,
+and authentication endpoints.
 """
 
 from django.urls import include, path
