@@ -17,11 +17,13 @@ djangorestframework==3.15.2
 djangorestframework_simplejwt==5.4.0
 djoser==2.3.1
 drf-yasg==1.21.10
-flake8==7.1.1
+flake8==6.0.0
+flake8-isort==6.0.0
 gunicorn==23.0.0
 idna==3.10
 inflection==0.5.1
 iniconfig==2.0.0
+isort==5.13.2
 itypes==1.2.0
 Jinja2==3.1.5
 MarkupSafe==3.0.2
@@ -32,9 +34,9 @@ pillow==11.0.0
 pluggy==1.5.0
 psycopg2-binary==2.9.10
 py==1.11.0
-pycodestyle==2.12.1
+pycodestyle==2.10.0
 pycparser==2.22
-pyflakes==3.2.0
+pyflakes==3.0.1
 PyJWT==2.10.1
 pyparsing==3.2.1
 pytest==8.3.3
@@ -45,6 +47,7 @@ pytz==2024.2
 PyYAML==6.0.2
 requests==2.32.3
 requests-oauthlib==2.0.0
+setuptools==80.9.0
 six==1.17.0
 social-auth-app-django==5.4.2
 social-auth-core==4.5.4

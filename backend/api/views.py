@@ -22,28 +22,15 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from recipes.models import (
-    Favorite,
-    Follower,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    ShoppingCart,
-    Tag,
-)
+from recipes.models import (Favorite, Follower, Ingredient, Recipe,
+                            RecipeIngredient, ShoppingCart, Tag)
+
 from .filters import RecipeFilter
 from .permissions import IsAuthorOrReadOnly
-from .serializers import (
-    AvatarSerializer,
-    DownloadShoppingCart,
-    FollowerSerializer,
-    IngredientSerializer,
-    RecipeSerializer,
-    RecipeShortLinkSerializer,
-    RecipeWriteSerializer,
-    ShortRecipe,
-    TagSerializer,
-)
+from .serializers import (AvatarSerializer, DownloadShoppingCart,
+                          FollowerSerializer, IngredientSerializer,
+                          RecipeSerializer, RecipeShortLinkSerializer,
+                          RecipeWriteSerializer, ShortRecipe, TagSerializer)
 
 User = get_user_model()
 
