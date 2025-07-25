@@ -13,6 +13,15 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
+from recipes.models import (
+    Favorite,
+    Follower,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag,
+)
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -22,15 +31,19 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from recipes.models import (Favorite, Follower, Ingredient, Recipe,
-                            RecipeIngredient, ShoppingCart, Tag)
-
 from .filters import RecipeFilter
 from .permissions import IsAuthorOrReadOnly
-from .serializers import (AvatarSerializer, DownloadShoppingCart,
-                          FollowerSerializer, IngredientSerializer,
-                          RecipeSerializer, RecipeShortLinkSerializer,
-                          RecipeWriteSerializer, ShortRecipe, TagSerializer)
+from .serializers import (
+    AvatarSerializer,
+    DownloadShoppingCart,
+    FollowerSerializer,
+    IngredientSerializer,
+    RecipeSerializer,
+    RecipeShortLinkSerializer,
+    RecipeWriteSerializer,
+    ShortRecipe,
+    TagSerializer,
+)
 
 User = get_user_model()
 
