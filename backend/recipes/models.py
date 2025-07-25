@@ -9,7 +9,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
-
 # User
 USER_NAME_MAX_LENGTH = 150
 USER_EMAIL_MAX_LENGTH = 254

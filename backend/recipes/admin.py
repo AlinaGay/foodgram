@@ -8,7 +8,7 @@ for User, Ingredient, Tag, and Recipe.
 from django.contrib import admin
 from django.db.models import Count
 
-from .models import User, Ingredient, Tag, Recipe
+from .models import Ingredient, Recipe, Tag, User
 
 
 @admin.action(description='Заблокировать выбранных пользователей')
