@@ -1,8 +1,7 @@
 """
 URL configuration for Foodgram API.
 
-Defines routes for users, ingredients,
-tags, recipes, and authentication endpoints.
+Defines routes for users, ingredients, tags, recipes, and authentication endpoints.
 """
 
 from django.urls import include, path
@@ -12,16 +11,14 @@ from .views import (
     CustomUserViewSet,
     IngredientViewSet,
     RecipeViewSet,
-    TagViewSet
+    TagViewSet,
 )
 
 router = DefaultRouter()
-
 router.register(r'users', CustomUserViewSet, basename='users')
 router.register('ingredients', IngredientViewSet, basename='ingredients')
 router.register('tags', TagViewSet, basename='tags')
 router.register(r'recipes', RecipeViewSet, basename='recipes')
-
 
 urlpatterns = [
     path('', include(router.urls)),
