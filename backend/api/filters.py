@@ -7,12 +7,21 @@ including filtering by author, tags, favorites, and shopping cart.
 
 from django_filters.rest_framework import (
     BooleanFilter,
+    CharFilter,
     FilterSet,
     ModelMultipleChoiceFilter,
     NumberFilter,
 )
 
-from recipes.models import Recipe, Tag
+from recipes.models import Ingredient, Recipe, Tag
+
+
+class IngredientFilter(FilterSet):
+    name = CharFilter(field_name='name', lookup_expr='istartswith')
+
+    class Meta:
+        model = Ingredient
+        fields = ['name']
 
 
 class RecipeFilter(FilterSet):

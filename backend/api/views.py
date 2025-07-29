@@ -32,7 +32,7 @@ from recipes.models import (
     Tag,
 )
 
-from .filters import RecipeFilter
+from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     AvatarSerializer,
@@ -186,17 +186,10 @@ class IngredientViewSet(CDLViewSet):
 
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
     pagination_class = None
-
-    def get_queryset(self):
-        """Optionally filter ingredients by name using query parameters."""
-        queryset = Ingredient.objects.all()
-        name = self.request.query_params.get('name')
-        if name:
-            queryset = queryset.filter(name__icontains=name)
-        return queryset
+    queryset = Ingredient.objects.all()
 
 
 class TagViewSet(CDLViewSet):
