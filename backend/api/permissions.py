@@ -20,5 +20,5 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
             return True
         return (
             request.user.is_authenticated
-            and (obj.author == request.user or request.user.is_admin)
+            and (obj.author == request.user or request.user.is_superuser)
         )

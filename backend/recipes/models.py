@@ -12,6 +12,7 @@ from django.db import models
 # User
 USER_NAME_MAX_LENGTH = 150
 USER_EMAIL_MAX_LENGTH = 254
+USERNAME_REGEX = r'^[\w.@+-]+$'
 
 # Ingredient
 INGREDIENT_NAME_MAX_LENGTH = 128
@@ -27,42 +28,46 @@ RECIPE_NAME_MAX_LENGTH = 256
 class User(AbstractUser):
     """Custom user model for Foodgram."""
 
-    USER = 'user'
-    ADMIN = 'admin'
-
-    ROLE_CHOICES = (
-        (ADMIN, 'Администратор'),
-        (USER, 'Пользователь')
-    )
     first_name = models.CharField(max_length=USER_NAME_MAX_LENGTH)
     last_name = models.CharField(max_length=USER_NAME_MAX_LENGTH)
-    username = models.CharField(max_length=USER_NAME_MAX_LENGTH,
-                                blank=True, null=True)
-    role = models.CharField(
-        max_length=max(len(role) for role, _ in ROLE_CHOICES),
-        choices=ROLE_CHOICES,
-        default=USER
+    username = models.CharField(
+        max_length=USER_NAME_MAX_LENGTH,
+        unique=True,
+        blank=False,
+        null=False,
+        validators=[
+            RegexValidator(
+                regex=USERNAME_REGEX,
+                message=(
+                    'Имя пользователя может содержать только буквы, '
+                    'цифры и @/./+/-/_'
+                )
+            )
+        ]
     )
-    email = models.EmailField(max_length=USER_EMAIL_MAX_LENGTH, unique=True)
+    email = models.EmailField(
+        max_length=USER_EMAIL_MAX_LENGTH,
+        unique=True,
+        blank=False,
+        null=False
+    )
     is_subscribed = models.BooleanField(default=False)
     avatar = models.ImageField(
         upload_to='users/avatars/',
         null=True,
+        blank=True,
         default=None
     )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = ['username', 'fist_name', 'last_name']
 
     class Meta:
         """Meta class for User model."""
 
-        ordering = ['id']
-
-    @property
-    def is_admin(self):
-        """Return True if user is admin or superuser."""
-        return self.role == self.ADMIN or self.is_superuser
+        ordering = ['username']
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
 
 class Ingredient(models.Model):

@@ -47,6 +47,37 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         fields = ('id', 'email', 'username',
                   'first_name', 'last_name', 'password')
         read_only_fields = ['id']
+        extra_kwargs = {
+            'email': {'required': True},
+            'username': {'required': True},
+            'password': {'write_only': True},
+        }
+
+    def validate_username(self, value):
+        """Validate that username is unique."""
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError(
+                {'username': 'Пользователь с таким username уже существует.'}
+            )
+        return value
+
+    def validate_email(self, value):
+        """Validate that email is unique."""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                {'email': 'Пользователь с таким email уже существует.'}
+            )
+        return value
+
+    def create(self, validated_data):
+        """Create user with encrypted password."""
+        try:
+            user = User.objects.create_user(**validated_data)
+            return user
+        except Exception as e:
+            raise serializers.ValidationError(
+                {'error': str(e)}
+            )
 
 
 class CustomUserSerializer(UserSerializer):

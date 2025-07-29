@@ -29,7 +29,6 @@ class UserAdmin(admin.ModelAdmin):
     list_display = (
         'last_name',
         'first_name',
-        'role',
         'email'
     )
 

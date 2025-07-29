@@ -25,7 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() in ['true', '1', 'yes']
+# DEBUG = os.getenv('DEBUG', 'False').lower() in ['true', '1', 'yes']
+DEBUG = True
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
@@ -85,14 +86,21 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('POSTGRES_DB', 'django'),
+#         'USER': os.getenv('POSTGRES_USER', 'django_user'),
+#         'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+#         'HOST': os.getenv('DB_HOST', 'db'),
+#         'PORT': os.getenv('DB_PORT', 5432)
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'django'),
-        'USER': os.getenv('POSTGRES_USER', 'django_user'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'db'),
-        'PORT': os.getenv('DB_PORT', 5432)
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -159,7 +167,7 @@ REST_FRAMEWORK = {
 
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 6,
 
 }
@@ -173,7 +181,7 @@ DJOSER = {
 
     'PERMISSIONS': {
         'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
-        'user_list': ['rest_framework.permissions.IsAdminUser'],
+        'user_list': ['rest_framework.permissions.AllowAny'],
         'user_create': ['rest_framework.permissions.AllowAny'],
         'current_user': ['rest_framework.permissions.IsAuthenticated'],
     },
