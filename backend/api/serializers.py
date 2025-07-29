@@ -102,6 +102,9 @@ class AvatarSerializer(serializers.ModelSerializer):
 
         model = User
         fields = ('avatar',)
+        extra_kwargs = {
+            'avatar': {'required': True},
+        }
 
 
 class TagSerializer(serializers.ModelSerializer):

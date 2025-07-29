@@ -73,6 +73,16 @@ class PaginateMixin:
 class CustomUserViewSet(PaginateMixin, UserViewSet):
     """ViewSet for user actions: subscribe, subscriptions, avatar."""
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        if not request.user.is_authenticated:
+            return Response(
+                {'detail': 'Authentication credentials were not provided.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
     @action(
         detail=True,
         methods=['post', 'delete'],
@@ -120,6 +130,11 @@ class CustomUserViewSet(PaginateMixin, UserViewSet):
     )
     def subscriptions(self, request):
         """Return a paginated list of users."""
+        if not request.user.is_authenticated:
+            return Response(
+                {'detail': 'Authentication credentials were not provided.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         return self.paginate_and_respond(
             User.objects.filter(followers__follower=request.user),
             FollowerSerializer
@@ -144,13 +159,12 @@ class CustomUserViewSet(PaginateMixin, UserViewSet):
             serializer = AvatarSerializer(
                 instance=user,
                 data=request.data,
-                partial=True,
                 context={'request': request}
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
+                            status=status.HTTP_200_OK)
 
         if request.method == 'DELETE':
             if user.avatar:
