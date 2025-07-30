@@ -10,6 +10,13 @@ from rest_framework import permissions
 class IsAuthorOrReadOnly(permissions.BasePermission):
     """Allows access only to the author or for safe methods."""
 
+    def has_permission(self, request, view):
+
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        return request.user and request.user.is_authenticated
+
     def has_object_permission(self, request, view, obj):
         """
         Return True if request is safe or user is the author/admin.

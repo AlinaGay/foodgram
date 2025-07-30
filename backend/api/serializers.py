@@ -199,6 +199,13 @@ class RecipeIngredientWriteSerializer(serializers.Serializer):
         model = RecipeIngredient
         fields = ('id', 'amount')
 
+    def validate_amount(self, value):
+        if value < 1:
+            raise serializers.ValidationError(
+                'Количество ингредиента должно быть больше нуля.'
+            )
+        return value
+
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
     """Serializer for writing recipes."""
@@ -207,7 +214,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientWriteSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
-    image = Base64ImageField(required=False, allow_null=True)
+    image = Base64ImageField(required=True, allow_null=False)
 
     class Meta:
         """Meta class for RecipeWriteSerializer."""

@@ -116,8 +116,8 @@ class Recipe(models.Model):
     name = models.CharField(max_length=RECIPE_NAME_MAX_LENGTH, blank=False)
     image = models.ImageField(
         upload_to='recipes/images/',
-        blank=True,
-        null=True
+        blank=False,
+        null=False
     )
     text = models.TextField(blank=False)
     cooking_time = models.PositiveIntegerField(

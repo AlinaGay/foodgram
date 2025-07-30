@@ -237,7 +237,7 @@ class RecipeViewSet(ModelViewSet):
         recipe.save()
 
         serializer = RecipeShortLinkSerializer(recipe)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=True,
