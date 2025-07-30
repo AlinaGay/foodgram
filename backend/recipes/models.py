@@ -111,7 +111,6 @@ class Recipe(models.Model):
                                          through='RecipeIngredient',
                                          through_fields=('recipe',
                                                          'ingredient'))
-    is_favorited = models.BooleanField(default=False)
     is_in_shopping_cart = models.BooleanField(default=False)
     name = models.CharField(max_length=RECIPE_NAME_MAX_LENGTH, blank=False)
     image = models.ImageField(

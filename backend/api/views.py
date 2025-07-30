@@ -256,16 +256,25 @@ class RecipeViewSet(ModelViewSet):
         recipe = get_object_or_404(Recipe, id=pk)
         user = request.user
 
-        if request.method == 'POST' or request.method == 'DELETE':
+        if request.method == 'POST':
             if Favorite.objects.filter(author=user, recipe=recipe).exists():
-                favorite = Favorite.objects.filter(author=user,
-                                                   recipe=recipe).first()
-                favorite.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-
+                return Response(
+                    {'errors': 'Рецепт уже в избранном.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             Favorite.objects.create(author=user, recipe=recipe)
-            serializer = ShortRecipe(recipe)
+            serializer = ShortRecipe(recipe, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            favorite = Favorite.objects.filter(author=user, recipe=recipe)
+            if not favorite.exists():
+                return Response(
+                    {'errors': 'Рецепта нет в избранном.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            favorite.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,
