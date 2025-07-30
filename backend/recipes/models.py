@@ -9,20 +9,15 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
-# User
-USER_NAME_MAX_LENGTH = 150
-USER_EMAIL_MAX_LENGTH = 254
-USERNAME_REGEX = r'^[\w.@+-]+$'
-
-# Ingredient
-INGREDIENT_NAME_MAX_LENGTH = 128
-INGREDIENT_MESUREMENT_MAX_LENGTH = 64
-
-# Tag
-TAG_MAX_LENGTH = 32
-
-# Recipe
-RECIPE_NAME_MAX_LENGTH = 256
+from .constants import (
+    INGREDIENT_MESUREMENT_MAX_LENGTH,
+    INGREDIENT_NAME_MAX_LENGTH,
+    RECIPE_NAME_MAX_LENGTH,
+    TAG_MAX_LENGTH,
+    USER_EMAIL_MAX_LENGTH,
+    USER_NAME_MAX_LENGTH,
+    USERNAME_REGEX
+)
 
 
 class User(AbstractUser):
@@ -51,7 +46,6 @@ class User(AbstractUser):
         blank=False,
         null=False
     )
-    is_subscribed = models.BooleanField(default=False)
     avatar = models.ImageField(
         upload_to='users/avatars/',
         null=True,
@@ -77,23 +71,25 @@ class Ingredient(models.Model):
     measurement_unit = models.CharField(
         max_length=INGREDIENT_MESUREMENT_MAX_LENGTH)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_ingredient_name_unit'
+            )
+        ]
+        ordering = ['name']
+
 
 class Tag(models.Model):
     """Model for tags."""
 
-    name = models.CharField(max_length=TAG_MAX_LENGTH)
+    name = models.CharField(max_length=TAG_MAX_LENGTH, unique=True)
     slug = models.SlugField(
         max_length=TAG_MAX_LENGTH,
-        unique=True,
-        null=True,
-        blank=True,
-        validators=[
-            RegexValidator(
-                regex=r'^[-a-zA-Z0-9_]+$',
-                message=('Слаг может содержать только буквы,',
-                         'цифры, дефис и нижнее подчёркивание.')
-            )
-        ]
+        blank=False,
+        null=False,
+        unique=True
     )
 
     def __str__(self):

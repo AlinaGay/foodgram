@@ -83,6 +83,8 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 class CustomUserSerializer(UserSerializer):
     """Serializer for user representation with subscription and avatar."""
 
+    is_subscribed = serializers.SerializerMethodField()
+
     class Meta(UserSerializer.Meta):
         """Meta class for CustomUserSerializer."""
 
@@ -90,6 +92,15 @@ class CustomUserSerializer(UserSerializer):
         fields = ('id', 'email', 'username',
                   'first_name', 'last_name', 'is_subscribed', 'avatar')
         read_only_fields = ('id', 'email')
+
+    def get_is_subscribed(self, obj):
+        """Return True if the current user is subscribed to obj (another user)."""
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return Follower.objects.filter(
+            follower=request.user, followed=obj
+        ).exists()
 
 
 class AvatarSerializer(serializers.ModelSerializer):
@@ -357,7 +368,7 @@ class FollowerSerializer(UserSerializer):
     def get_recipes_count(self, obj):
         """Return the number of recipes for the given user."""
         return obj.recipe_set.count()
-    
+
     def get_recipes(self, obj):
         """Return recipes with optional limit from query params."""
         request = self.context.get('request')
