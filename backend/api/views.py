@@ -106,10 +106,16 @@ class CustomUserViewSet(PaginateMixin, UserViewSet):
             )
 
         if request.method == 'POST':
-            Follower.objects.get_or_create(
+            if Follower.objects.filter(
                 follower=follower,
                 followed=followed
-            )
+            ).exists():
+                return Response(
+                    {'detail': 'Вы уже подписаны на этого пользователя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            Follower.objects.create(follower=follower, followed=followed)
             serializer = FollowerSerializer(
                 followed,
                 context={'request': request}

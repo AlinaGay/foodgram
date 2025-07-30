@@ -334,7 +334,7 @@ class FollowerSerializer(UserSerializer):
     """Serializer for user followers."""
 
     is_subscribed = serializers.SerializerMethodField()
-    recipes = ShortRecipe(source='recipe_set', read_only=True, many=True)
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
@@ -357,3 +357,17 @@ class FollowerSerializer(UserSerializer):
     def get_recipes_count(self, obj):
         """Return the number of recipes for the given user."""
         return obj.recipe_set.count()
+    
+    def get_recipes(self, obj):
+        """Return recipes with optional limit from query params."""
+        request = self.context.get('request')
+        recipes_limit = request.query_params.get('recipes_limit')
+
+        recipes_queryset = obj.recipe_set.all()
+
+        if recipes_limit and recipes_limit.isdigit():
+            recipes_queryset = recipes_queryset[:int(recipes_limit)]
+
+        serializer = ShortRecipe(
+            recipes_queryset, many=True, context={'request': request})
+        return serializer.data
