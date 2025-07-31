@@ -94,6 +94,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
+        """Return a string representation of the ingredient."""
         return f"{self.name} ({self.measurement_unit})"
 
 

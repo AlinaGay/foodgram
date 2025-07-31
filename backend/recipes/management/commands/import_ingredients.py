@@ -9,7 +9,6 @@ import os
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.db import IntegrityError
 
 from recipes.models import Ingredient
 
@@ -36,7 +35,8 @@ class Command(BaseCommand):
             for row in reader:
                 if len(row) < 2:
                     continue
-                ingredients.append(Ingredient(name=row[0], measurement_unit=row[1]))
+                ingredients.append(
+                    Ingredient(name=row[0], measurement_unit=row[1]))
             try:
                 Ingredient.objects.bulk_create(
                     ingredients, ignore_conflicts=True

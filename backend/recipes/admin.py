@@ -52,7 +52,8 @@ class TagAdmin(admin.ModelAdmin):
 
 
 class RecipeIngredientInline(admin.TabularInline):
-    """Inline for ingredients of recipe"""
+    """Inline for ingredients of recipe."""
+
     model = RecipeIngredient
     extra = 1
     min_num = 1
