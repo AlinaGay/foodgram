@@ -17,9 +17,13 @@ from recipes.models import Ingredient, Recipe, Tag
 
 
 class IngredientFilter(FilterSet):
+    """FilterSet for filtering ingredients."""
+
     name = CharFilter(field_name='name', lookup_expr='istartswith')
 
     class Meta:
+        """Meta option for IngredientFilter."""
+
         model = Ingredient
         fields = ['name']
 

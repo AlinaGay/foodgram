@@ -1,3 +1,9 @@
+"""
+Constants for the Foodgram project.
+
+Defines max lengths, regex patterns, and minimum values for models.
+"""
+
 # User
 USER_NAME_MAX_LENGTH = 150
 USER_EMAIL_MAX_LENGTH = 254
@@ -11,4 +17,5 @@ INGREDIENT_MESUREMENT_MAX_LENGTH = 64
 TAG_MAX_LENGTH = 32
 
 # Recipe
+MIN_VALUE = 1
 RECIPE_NAME_MAX_LENGTH = 256

@@ -94,7 +94,7 @@ class CustomUserSerializer(UserSerializer):
         read_only_fields = ('id', 'email')
 
     def get_is_subscribed(self, obj):
-        """Return True if the current user is subscribed to obj (another user)."""
+        """Return True if the current user is subscribed to obj."""
         request = self.context.get('request')
         if not request or request.user.is_anonymous:
             return False
@@ -211,6 +211,7 @@ class RecipeIngredientWriteSerializer(serializers.Serializer):
         fields = ('id', 'amount')
 
     def validate_amount(self, value):
+        """Return recipes for the given user."""
         if value < 1:
             raise serializers.ValidationError(
                 'Количество ингредиента должно быть больше нуля.'

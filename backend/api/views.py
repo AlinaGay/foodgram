@@ -15,7 +15,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -73,8 +73,17 @@ class PaginateMixin:
 class CustomUserViewSet(PaginateMixin, UserViewSet):
     """ViewSet for user actions: subscribe, subscriptions, avatar."""
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated]
+    )
     def me(self, request):
+        """
+        Return the authenticated user's information.
+
+        Only available to authenticated users.
+        """
         if not request.user.is_authenticated:
             return Response(
                 {'detail': 'Authentication credentials were not provided.'},
@@ -123,9 +132,17 @@ class CustomUserViewSet(PaginateMixin, UserViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
-            Follower.objects.filter(
-                follower=follower, followed=followed).delete()
+            follow_relation = Follower.objects.filter(
+                follower=follower,
+                followed=followed
+            )
+            if not follow_relation.exists():
+                return Response(
+                    {'detail': 'Вы не подписаны на этого пользователя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
+            follow_relation.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(

@@ -6,9 +6,10 @@ for User, Ingredient, Tag, and Recipe.
 """
 
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from django.db.models import Count
 
-from .models import Ingredient, Recipe, Tag, User
+from .models import Ingredient, Recipe, RecipeIngredient, Tag, User
 
 
 @admin.action(description='Заблокировать выбранных пользователей')
@@ -23,7 +24,7 @@ def unblock_users(modeladmin, request, queryset):
     queryset.update(is_active=True)
 
 
-class UserAdmin(admin.ModelAdmin):
+class CustomUserAdmin(UserAdmin):
     """Admin configuration for User model."""
 
     list_display = (
@@ -50,9 +51,18 @@ class TagAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+class RecipeIngredientInline(admin.TabularInline):
+    """Inline for ingredients of recipe"""
+    model = RecipeIngredient
+    extra = 1
+    min_num = 1
+    fields = ('ingredient', 'amount')
+
+
 class RecipeAdmin(admin.ModelAdmin):
     """Admin configuration for Recipe model."""
 
+    inlines = [RecipeIngredientInline]
     list_display = (
         'name',
         'author',
@@ -60,7 +70,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'cooking_time',
         'favorites_count',
     )
-
+    exclude = ('short_link',)
     list_editable = ('text',)
     search_fields = ('name', 'author__username')
     list_filter = ('tags',)
@@ -96,7 +106,7 @@ class IngredientAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-admin.site.register(User, UserAdmin)
+admin.site.register(User, CustomUserAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Recipe, RecipeAdmin)

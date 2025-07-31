@@ -11,7 +11,11 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
     """Allows access only to the author or for safe methods."""
 
     def has_permission(self, request, view):
+        """
+        Return True if the request is a safe method.
 
+        Safe methods are read-only (GET, HEAD, OPTIONS).
+        """
         if request.method in permissions.SAFE_METHODS:
             return True
 
