@@ -25,27 +25,24 @@ class Command(BaseCommand):
 
         Each row must contain at least two columns: name and measurement_unit.
         """
-        file_path = '/app/data/ingredients.csv'
+        file_path = os.path.join(settings.BASE_DIR, 'data', 'ingredients.csv')
         if not os.path.exists(file_path):
             self.stderr.write(f'File {file_path} is not found.')
             return
 
         with open(file_path, newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
-            count = 0
+            ingredients = []
             for row in reader:
                 if len(row) < 2:
                     continue
-                try:
-                    Ingredient.objects.update_or_create(
-                        name=row[0],
-                        defaults={'measurement_unit': row[1]}
-                    )
-                    count += 1
-                except IntegrityError as e:
-                    self.stderr.write(f"[Ingredient] Error: {e}")
-                except Exception as e:
-                    self.stderr.write(f"Unexpected error: {e}")
-            self.stdout.write(self.style.SUCCESS(
-                f"Imported ingredients: {count}"
-            ))
+                ingredients.append(Ingredient(name=row[0], measurement_unit=row[1]))
+            try:
+                Ingredient.objects.bulk_create(
+                    ingredients, ignore_conflicts=True
+                )
+                self.stdout.write(self.style.SUCCESS(
+                    f"Imported ingredients: {len(ingredients)}"
+                ))
+            except Exception as e:
+                self.stderr.write(f"Unexpected error: {e}")
