@@ -5,7 +5,12 @@ Defines custom user, ingredient, tag, recipe,
 favorite, shopping cart, and follower models.
 """
 
+
+import hashlib
+
 from django.contrib.auth.models import AbstractUser
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
@@ -31,8 +36,6 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=USER_NAME_MAX_LENGTH,
         unique=True,
-        blank=False,
-        null=False,
         validators=[
             RegexValidator(
                 regex=USERNAME_REGEX,
@@ -47,8 +50,6 @@ class User(AbstractUser):
     email = models.EmailField(
         max_length=USER_EMAIL_MAX_LENGTH,
         unique=True,
-        blank=False,
-        null=False,
         verbose_name='Электронная почта'
     )
     avatar = models.ImageField(
@@ -68,6 +69,10 @@ class User(AbstractUser):
         ordering = ['first_name', 'last_name', 'username']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+    def __str__(self):
+        """Return a string representation of the User model."""
+        return f"{self.first_name} {self.last_name}"
 
 
 class Ingredient(models.Model):
@@ -94,7 +99,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        """Return a string representation of the ingredient."""
+        """Return a string representation of the Ingredient model."""
         return f"{self.name} ({self.measurement_unit})"
 
 
@@ -105,8 +110,6 @@ class Tag(models.Model):
         max_length=TAG_MAX_LENGTH, unique=True, verbose_name='Наименование')
     slug = models.SlugField(
         max_length=TAG_MAX_LENGTH,
-        blank=False,
-        null=False,
         unique=True,
         verbose_name='Слаг'
     )
@@ -117,6 +120,10 @@ class Tag(models.Model):
         ordering = ['name']
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
+
+    def __str__(self):
+        """Return a string representation of the Tag model."""
+        return f"{self.name} ({self.slug})"
 
 
 class Recipe(models.Model):
@@ -152,6 +159,26 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
+    def save(self, *args, **kwargs):
+        if not self.pk and not self.short_link:
+            request = kwargs.pop('request', None)
+            short_hash = hashlib.md5(
+                f"{self.pk}-{self.name}".encode()).hexdigest()[:8]
+            if request:
+                self.short_link = request.build_absolute_uri(f'/r/{short_hash}/')
+            else:
+                domain = get_current_site(None).domain
+                self.short_link = f'http://{domain}/r/{short_hash}/'
+
+            if Recipe.objects.filter(short_link=self.short_link).exists():
+                raise ValidationError("Короткая ссылка уже существует.")
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        """Return a string representation of the Recipe model."""
+        return f"{self.name} ({self.author})"
+
 
 class RecipeIngredient(models.Model):
     """Model for ingredients in a recipe."""
@@ -161,8 +188,7 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.SET_NULL,
                                    blank=True, null=True)
     amount = models.PositiveIntegerField(
-        validators=[MinValueValidator(MIN_VALUE)],
-        null=True
+        validators=[MinValueValidator(MIN_VALUE)]
     )
 
     class Meta:
@@ -176,6 +202,10 @@ class RecipeIngredient(models.Model):
         ]
         verbose_name = 'Ингредиент для рецепта'
         verbose_name_plural = 'Ингредиенты для рецепта'
+
+    def __str__(self):
+        """Return a string representation of the RecipeIngredient model."""
+        return f"{self.ingredient} ({self.recipe})"
 
 
 class UserRecipeRelation(models.Model):
@@ -198,6 +228,10 @@ class UserRecipeRelation(models.Model):
                 name='unique_%(app_label)s_%(class)s_author_recipe'
             )
         ]
+
+    def __str__(self):
+        """Return a string representation of the UserRecipeRelation model."""
+        return f"{self.recipe} ({self.author})"
 
 
 class Favorite(UserRecipeRelation):
@@ -235,3 +269,7 @@ class Follower(models.Model):
                 name='prevent_self_follow'
             )
         ]
+
+    def __str__(self):
+        """Return a string representation of the Follower model."""
+        return f"{self.followed} ({self.follower})"

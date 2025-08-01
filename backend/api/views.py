@@ -248,19 +248,22 @@ class RecipeViewSet(ModelViewSet):
     def get_link(self, request, pk=None):
         """Generate and return a short link for the specified recipe."""
         recipe = get_object_or_404(Recipe, id=pk)
-        if recipe.short_link:
-            serializer = RecipeShortLinkSerializer(recipe)
-            return Response(serializer.data)
+        if not recipe.short_link:
+            recipe.save(request=request)
+            return Response({"short_link": recipe.short_link})
+        return Response({"error": "Ссылка уже существует"}, status=status.HTTP_400_BAD_REQUEST)
+        #     serializer = RecipeShortLinkSerializer(recipe)
+        #     return Response(serializer.data)
 
-        base_url = "https://foodgram-site.zapto.org/"
-        short_hash = hashlib.md5(
-            f"{recipe.id}-{recipe.name}".encode()).hexdigest()[:8]
-        short_link = base_url + short_hash
-        recipe.short_link = short_link
-        recipe.save()
+        # base_url = "https://foodgram-site.zapto.org/"
+        # short_hash = hashlib.md5(
+        #     f"{recipe.id}-{recipe.name}".encode()).hexdigest()[:8]
+        # short_link = base_url + short_hash
+        # recipe.short_link = short_link
+        # recipe.save()
 
-        serializer = RecipeShortLinkSerializer(recipe)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # serializer = RecipeShortLinkSerializer(recipe)
+        # return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=True,
