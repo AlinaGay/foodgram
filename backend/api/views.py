@@ -18,6 +18,7 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import ListModelMixin
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
@@ -49,28 +50,31 @@ from .serializers import (
 User = get_user_model()
 
 
-class PaginateMixin:
-    """Mixin for paginating queryset and returning paginated response."""
-
-    def paginate_and_respond(self, queryset, serializer_class, **kwargs):
-        """
-        Paginate the given queryset.
-
-        It returns a paginated response using
-        the specified serializer.
-
-        If pagination is not applied, return
-        a regular response with serialized data.
-        """
-        page = self.paginate_queryset(queryset)
-        to_ser = page if page is not None else queryset
-        serializer = serializer_class(
-            to_ser, many=True, context={'request': self.request}, **kwargs)
-        return self.get_paginated_response(
-            serializer.data) if page is not None else Response(serializer.data)
+class PageNumberPaginationConfig(PageNumberPagination):
+    page_size = 6
+    page_size_query_param = 'limit'
 
 
-class CustomUserViewSet(PaginateMixin, UserViewSet):
+# class PaginateMixin:
+#     """Mixin for paginating queryset and returning paginated response."""
+
+#     def paginate_and_respond(self, queryset, serializer_class, **kwargs):
+#         """
+#         Paginate the given queryset.
+
+#         It returns a paginated response using
+#         the specified serializer.
+
+#         If pagination is not applied, return
+#         a regular response with serialized data.
+#         """
+#         page = self.paginate_queryset(queryset)
+#         to_ser = page if page is not None else queryset
+#         serializer = serializer_class(
+#             to_ser, many=True, context={'request': self.request}, **kwargs)
+#         return self.get_paginated_response(
+#             serializer.data) if page is not None else Response(serializer.data)
+class CustomUserViewSet(UserViewSet):
     """ViewSet for user actions: subscribe, subscriptions, avatar."""
 
     @action(
@@ -158,10 +162,18 @@ class CustomUserViewSet(PaginateMixin, UserViewSet):
                 {'detail': 'Authentication credentials were not provided.'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
-        return self.paginate_and_respond(
-            User.objects.filter(followers__follower=request.user),
-            FollowerSerializer
-        )
+
+        queryset = User.objects.filter(followers__follower=request.user)
+        paginator = PageNumberPaginationConfig()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+
+        serializer = FollowerSerializer(
+            page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
+        # return self.paginate_and_respond(
+        #     User.objects.filter(followers__follower=request.user),
+        #     FollowerSerializer
+        # )
 
     @action(
         detail=False,
@@ -211,7 +223,7 @@ class IngredientViewSet(CDLViewSet):
     permission_classes = (AllowAny,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
-    pagination_class = None
+    # pagination_class = None
     queryset = Ingredient.objects.all()
 
 
@@ -221,7 +233,7 @@ class TagViewSet(CDLViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
-    pagination_class = None
+    # pagination_class = None
 
 
 class RecipeViewSet(ModelViewSet):
@@ -233,6 +245,7 @@ class RecipeViewSet(ModelViewSet):
     ordering_fields = ('-pub_date',)
     permission_classes = (IsAuthorOrReadOnly,)
     serializer_class = RecipeSerializer
+    pagination_class = PageNumberPaginationConfig
 
     def perform_create(self, serializer):
         """Save a new recipe with the authenticated user as the author."""
@@ -251,7 +264,10 @@ class RecipeViewSet(ModelViewSet):
         if not recipe.short_link:
             recipe.save(request=request)
             return Response({"short_link": recipe.short_link})
-        return Response({"error": "Ссылка уже существует"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "Ссылка уже существует"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
         #     serializer = RecipeShortLinkSerializer(recipe)
         #     return Response(serializer.data)
 
