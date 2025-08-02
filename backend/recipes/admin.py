@@ -24,7 +24,7 @@ def unblock_users(modeladmin, request, queryset):
     queryset.update(is_active=True)
 
 
-class CustomUserAdmin(UserAdmin):
+class UserAdminConfig(UserAdmin):
     """Admin configuration for User model."""
 
     list_display = (
@@ -107,7 +107,7 @@ class IngredientAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-admin.site.register(User, CustomUserAdmin)
+admin.site.register(User, UserAdminConfig)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Recipe, RecipeAdmin)
