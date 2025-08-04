@@ -8,6 +8,7 @@ favorite, shopping cart, and follower models.
 
 import hashlib
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ValidationError
@@ -165,9 +166,10 @@ class Recipe(models.Model):
             short_hash = hashlib.md5(
                 f"{self.pk}-{self.name}".encode()).hexdigest()[:8]
             if request:
-                self.short_link = request.build_absolute_uri(f'/r/{short_hash}/')
+                self.short_link = request.build_absolute_uri(
+                    f'/r/{short_hash}/')
             else:
-                domain = get_current_site(None).domain
+                domain = getattr(settings, 'DEFAULT_DOMAIN', 'localhost:8000')
                 self.short_link = f'http://{domain}/r/{short_hash}/'
 
             if Recipe.objects.filter(short_link=self.short_link).exists():
