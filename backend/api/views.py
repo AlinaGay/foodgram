@@ -89,42 +89,40 @@ class UserActionsViewSet(UserViewSet):
         followed = get_object_or_404(User, pk=id)
         follower = request.user
 
-        if follower == followed:
-            return Response(
-                {'detail': 'Нельзя подписаться на самого себя.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         if request.method == 'POST':
-            if Follower.objects.filter(
+            if follower == followed:
+                return Response(
+                    {'detail': 'Нельзя подписаться на самого себя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            obj, created = Follower.objects.get_or_create(
                 follower=follower,
                 followed=followed
-            ).exists():
+            )
+            if not created:
                 return Response(
                     {'detail': 'Вы уже подписаны на этого пользователя.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
-            Follower.objects.create(follower=follower, followed=followed)
             serializer = FollowerSerializer(
                 followed,
                 context={'request': request}
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if request.method == 'DELETE':
-            follow_relation = Follower.objects.filter(
-                follower=follower,
-                followed=followed
-            )
-            if not follow_relation.exists():
-                return Response(
-                    {'detail': 'Вы не подписаны на этого пользователя.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        follow_relation = Follower.objects.filter(
+            follower=follower,
+            followed=followed
+        )
 
-            follow_relation.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        deleted_count, _ = follow_relation.delete()
+        if not deleted_count:
+            return Response(
+                {'detail': 'Вы не подписаны на этого пользователя.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
