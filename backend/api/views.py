@@ -8,6 +8,7 @@ ingredients, tags, recipes, favorites, and shopping cart.
 import hashlib
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db.models import F, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -41,7 +42,6 @@ from .serializers import (
     FollowerSerializer,
     IngredientSerializer,
     RecipeSerializer,
-    RecipeShortLinkSerializer,
     RecipeWriteSerializer,
     ShortRecipe,
     TagSerializer,
@@ -55,27 +55,9 @@ class PageNumberPaginationConfig(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
-# class PaginateMixin:
-#     """Mixin for paginating queryset and returning paginated response."""
-
-#     def paginate_and_respond(self, queryset, serializer_class, **kwargs):
-#         """
-#         Paginate the given queryset.
-
-#         It returns a paginated response using
-#         the specified serializer.
-
-#         If pagination is not applied, return
-#         a regular response with serialized data.
-#         """
-#         page = self.paginate_queryset(queryset)
-#         to_ser = page if page is not None else queryset
-#         serializer = serializer_class(
-#             to_ser, many=True, context={'request': self.request}, **kwargs)
-#         return self.get_paginated_response(
-#             serializer.data) if page is not None else Response(serializer.data)
 class CustomUserViewSet(UserViewSet):
     """ViewSet for user actions: subscribe, subscriptions, avatar."""
+    pagination_class = PageNumberPaginationConfig
 
     @action(
         detail=False,
@@ -157,23 +139,17 @@ class CustomUserViewSet(UserViewSet):
     )
     def subscriptions(self, request):
         """Return a paginated list of users."""
-        if not request.user.is_authenticated:
-            return Response(
-                {'detail': 'Authentication credentials were not provided.'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
         queryset = User.objects.filter(followers__follower=request.user)
-        paginator = PageNumberPaginationConfig()
-        page = paginator.paginate_queryset(queryset, request, view=self)
-
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = FollowerSerializer(
+                page, many=True, context={'request': request}
+            )
+            return self.get_paginated_response(serializer.data)
         serializer = FollowerSerializer(
-            page, many=True, context={'request': request})
-        return paginator.get_paginated_response(serializer.data)
-        # return self.paginate_and_respond(
-        #     User.objects.filter(followers__follower=request.user),
-        #     FollowerSerializer
-        # )
+            queryset, many=True, context={'request': request}
+        )
+        return Response(serializer.data)
 
     @action(
         detail=False,
@@ -261,25 +237,18 @@ class RecipeViewSet(ModelViewSet):
     def get_link(self, request, pk=None):
         """Generate and return a short link for the specified recipe."""
         recipe = get_object_or_404(Recipe, id=pk)
-        if not recipe.short_link:
+        if recipe.short_link:
+            return Response({"short-link": recipe.short_link})
+
+        try:
             recipe.save(request=request)
-            return Response({"short_link": recipe.short_link})
-        return Response(
-            {"error": "Ссылка уже существует"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-        #     serializer = RecipeShortLinkSerializer(recipe)
-        #     return Response(serializer.data)
+            return Response({"short-link": recipe.short_link})
 
-        # base_url = "https://foodgram-site.zapto.org/"
-        # short_hash = hashlib.md5(
-        #     f"{recipe.id}-{recipe.name}".encode()).hexdigest()[:8]
-        # short_link = base_url + short_hash
-        # recipe.short_link = short_link
-        # recipe.save()
-
-        # serializer = RecipeShortLinkSerializer(recipe)
-        # return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": f"Ошибка генерации ссылки: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(
         detail=True,

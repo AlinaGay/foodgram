@@ -302,28 +302,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return RecipeSerializer(instance, context=self.context).data
 
 
-class RecipeShortLinkSerializer(serializers.ModelSerializer):
-    """Serializer for recipe short link."""
-
-    short_link = serializers.SerializerMethodField()
-
-    class Meta:
-        """Meta class for RecipeShortLinkSerializer."""
-
-        model = Recipe
-        fields = ('short_link',)
-
-    def get_short_link(self, obj):
-        """Return the short link for the recipe."""
-        return obj.short_link
-
-    def to_representation(self, instance):
-        """Return the serialized representation with 'short-link' key."""
-        data = super().to_representation(instance)
-        data['short-link'] = data.pop('short_link')
-        return data
-
-
 class ShortRecipe(serializers.ModelSerializer):
     """Serializer for short recipe representation."""
 

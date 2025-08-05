@@ -161,21 +161,45 @@ class Recipe(models.Model):
         verbose_name_plural = 'Рецепты'
 
     def save(self, *args, **kwargs):
+        """
+        Saves the Recipe instance to the database.
+
+        If the instance is being created and does
+        not have a short_link, generates a unique short_link
+        using an MD5 hash of the primary key and name.
+        The short_link is constructed using either the
+        request's absolute URI or a default domain
+        from settings. If a Recipe with the same short_link
+        already exists, raises a ValidationError.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+            May include 'request' for building absolute URI.
+
+        Raises:
+            ValidationError: If the generated
+            short_link already exists in the database.
+        """
         if not self.pk and not self.short_link:
-            request = kwargs.pop('request', None)
+            super().save(*args, **kwargs)
             short_hash = hashlib.md5(
-                f"{self.pk}-{self.name}".encode()).hexdigest()[:8]
+                f"{self.pk}-{self.name}".encode()
+            ).hexdigest()[:8]
+            request = kwargs.pop('request', None)
+
             if request:
                 self.short_link = request.build_absolute_uri(
                     f'/r/{short_hash}/')
             else:
                 domain = getattr(settings, 'DEFAULT_DOMAIN', 'localhost:8000')
                 self.short_link = f'http://{domain}/r/{short_hash}/'
-
             if Recipe.objects.filter(short_link=self.short_link).exists():
                 raise ValidationError("Короткая ссылка уже существует.")
 
-        super().save(*args, **kwargs)
+            super().save(update_fields=['short_link'])
+        else:
+            super().save(*args, **kwargs)
 
     def __str__(self):
         """Return a string representation of the Recipe model."""
