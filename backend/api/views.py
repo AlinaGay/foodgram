@@ -170,13 +170,8 @@ class UserActionsViewSet(UserViewSet):
             return Response(serializer.data,
                             status=status.HTTP_200_OK)
 
-        if request.method == 'DELETE':
-            if user.avatar:
-                user.avatar.delete(save=False)
-
-            user.avatar = None
-            user.save(update_fields=['avatar'])
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        user.avatar.delete(save=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CDLViewSet(RetrieveAPIView, ListModelMixin, GenericViewSet):
