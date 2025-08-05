@@ -55,7 +55,7 @@ class PageNumberPaginationConfig(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
-class CustomUserViewSet(UserViewSet):
+class UserActionsViewSet(UserViewSet):
     """ViewSet for user actions: subscribe, subscriptions, avatar."""
     pagination_class = PageNumberPaginationConfig
 

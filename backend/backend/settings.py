@@ -173,9 +173,9 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'VIEWS': {
-        'user': 'api.views.CustomUserViewSet',
-        'user_list': 'api.views.CustomUserViewSet',
-        'current_user': 'api.views.CustomUserViewSet',
+        'user': 'api.views.UserActionsViewSet',
+        'user_list': 'api.views.UserActionsViewSet',
+        'current_user': 'api.views.UserActionsViewSet',
     },
 
     'PERMISSIONS': {
