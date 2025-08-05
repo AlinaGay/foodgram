@@ -22,7 +22,11 @@ from rest_framework.mixins import ListModelMixin
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import (
+    GenericViewSet,
+    ModelViewSet,
+    ReadOnlyModelViewSet
+)
 
 from recipes.models import (
     Favorite,
@@ -174,30 +178,22 @@ class UserActionsViewSet(UserViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class CDLViewSet(RetrieveAPIView, ListModelMixin, GenericViewSet):
-    """Base viewset for read-only models."""
-
-    pass
-
-
-class IngredientViewSet(CDLViewSet):
+class IngredientViewSet(ReadOnlyModelViewSet):
     """ViewSet for listing and searching ingredients."""
 
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
-    # pagination_class = None
-    queryset = Ingredient.objects.all()
 
 
-class TagViewSet(CDLViewSet):
+class TagViewSet(ReadOnlyModelViewSet):
     """ViewSet for listing tags."""
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
-    # pagination_class = None
 
 
 class RecipeViewSet(ModelViewSet):
