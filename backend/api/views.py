@@ -70,11 +70,6 @@ class UserActionsViewSet(UserViewSet):
 
         Only available to authenticated users.
         """
-        if not request.user.is_authenticated:
-            return Response(
-                {'detail': 'Authentication credentials were not provided.'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
