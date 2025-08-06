@@ -5,10 +5,7 @@ This module contains viewsets and actions for users,
 ingredients, tags, recipes, favorites, and shopping cart.
 """
 
-import hashlib
-
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.db.models import F, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -17,15 +14,9 @@ from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
-from rest_framework.generics import RetrieveAPIView
-from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import (
-    GenericViewSet,
-    ModelViewSet,
-    ReadOnlyModelViewSet
-)
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from recipes.models import (
     Favorite,
@@ -41,7 +32,6 @@ from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     AvatarSerializer,
-    DownloadShoppingCart,
     FollowerSerializer,
     IngredientSerializer,
     RecipeSerializer,
@@ -278,12 +268,9 @@ class RecipeViewSet(ModelViewSet):
     def download_shopping_cart(self, request):
         """Download the authenticated user's shopping cart."""
         user = request.user
-        shopping_cart = ShoppingCart.objects.filter(author=user)
-        recipes = Recipe.objects.filter(
-            id__in=shopping_cart.values_list('recipe_id', flat=True)
-        )
         ingredients = (
-            RecipeIngredient.objects.filter(recipe__in=recipes)
+            RecipeIngredient.objects.filter(
+                recipe__shoppingcart__author=user)
             .values(
                 name=F('ingredient__name'),
                 measurement_unit=F('ingredient__measurement_unit')
@@ -292,13 +279,12 @@ class RecipeViewSet(ModelViewSet):
             .order_by('name')
         )
 
-        serializer = DownloadShoppingCart(ingredients, many=True)
         lines = [
             (
                 f"- {item['name']} {item['total_amount']} "
                 f"{item['measurement_unit']}"
             )
-            for item in serializer.data
+            for item in ingredients
         ]
 
         response = HttpResponse("\n".join(lines), content_type="text/plain")

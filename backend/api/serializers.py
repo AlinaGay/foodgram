@@ -312,14 +312,6 @@ class ShortRecipe(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class DownloadShoppingCart(serializers.Serializer):
-    """Serializer for shopping cart download."""
-
-    name = serializers.CharField()
-    total_amount = serializers.FloatField()
-    measurement_unit = serializers.CharField()
-
-
 class FollowerSerializer(UserSerializer):
     """Serializer for user followers."""
 
