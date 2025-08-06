@@ -19,7 +19,6 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import ListModelMixin
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import (
@@ -50,13 +49,9 @@ from .serializers import (
     ShortRecipe,
     TagSerializer,
 )
+from .utils import add_object, PageNumberPaginationConfig, remove_object
 
 User = get_user_model()
-
-
-class PageNumberPaginationConfig(PageNumberPagination):
-    page_size = 6
-    page_size_query_param = 'limit'
 
 
 class UserActionsViewSet(UserViewSet):
@@ -100,29 +95,23 @@ class UserActionsViewSet(UserViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            obj, created = Follower.objects.get_or_create(
+            return add_object(
+                model=Follower,
+                serializer_instance=followed,
+                serializer_class=FollowerSerializer,
+                already_added_message=(
+                    'Вы уже подписаны на этого пользователя.'),
+                context={'request': request},
                 follower=follower,
                 followed=followed
             )
-            if not created:
-                return Response(
-                    {'detail': 'Вы уже подписаны на этого пользователя.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            serializer = FollowerSerializer(
-                followed,
-                context={'request': request}
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        deleted, _ = Follower.objects.filter(follower=follower,
-                                             followed=followed).delete()
-        if not deleted:
-            return Response(
-                {'detail': 'Вы не подписаны на этого пользователя.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return remove_object(
+            model=Follower,
+            not_found_message='Вы не подписаны на этого пользователя.',
+            follower=follower,
+            followed=followed
+        )
 
     @action(
         detail=False,
@@ -230,64 +219,55 @@ class RecipeViewSet(ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        url_path='favorite',
-        permission_classes=(IsAuthenticated,)
-    )
+    @action(detail=True, methods=['post', 'delete'],
+            url_path='favorite', permission_classes=(IsAuthenticated,))
     def favorite(self, request, pk=None):
-        """Add or remove the specified recipe from."""
+        """Add or remove the specified recipe from favorites."""
         recipe = get_object_or_404(Recipe, id=pk)
         user = request.user
 
         if request.method == 'POST':
-            obj, favorited = Favorite.objects.get_or_create(
+            return add_object(
+                model=Favorite,
+                serializer_instance=recipe,
+                serializer_class=ShortRecipe,
+                already_added_message='Рецепт уже в избранном.',
+                context={'request': request},
                 author=user,
-                recipe=recipe)
-            if not favorited:
-                return Response({'detail': 'Рецепт уже в избранном.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            serializer = ShortRecipe(recipe, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        deleted, _ = Favorite.objects.filter(author=user,
-                                             recipe=recipe).delete()
-        if not deleted:
-            return Response(
-                {'detail': 'Рецепта нет в избранном.'},
-                status=status.HTTP_400_BAD_REQUEST
+                recipe=recipe
             )
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        url_path='shopping_cart',
-        permission_classes=(IsAuthenticated,)
-    )
+        return remove_object(
+            model=Favorite,
+            not_found_message='Рецепта нет в избранном.',
+            author=user,
+            recipe=recipe
+        )
+
+    @action(detail=True, methods=['post', 'delete'],
+            url_path='shopping_cart', permission_classes=(IsAuthenticated,))
     def shopping_cart(self, request, pk=None):
-        """Add or remove the specified recipe."""
+        """Add or remove the specified recipe from shopping cart."""
         recipe = get_object_or_404(Recipe, id=pk)
         user = request.user
 
         if request.method == 'POST':
-            obj, created = ShoppingCart.objects.get_or_create(author=user,
-                                                              recipe=recipe)
-            if not created:
-                return Response({'detail': 'Рецепт уже в списке покупок'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            serializer = ShortRecipe(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        deleted, _ = ShoppingCart.objects.filter(author=user,
-                                                 recipe=recipe).delete()
-        if not deleted:
-            return Response(
-                {'detail': 'Рецепта не было в списке покупок.'},
-                status=status.HTTP_400_BAD_REQUEST
+            return add_object(
+                model=ShoppingCart,
+                serializer_instance=recipe,
+                serializer_class=ShortRecipe,
+                already_added_message='Рецепт уже в списке покупок.',
+                context={'request': request},
+                author=user,
+                recipe=recipe
             )
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return remove_object(
+            model=ShoppingCart,
+            not_found_message='Рецепта не было в списке покупок.',
+            author=user,
+            recipe=recipe
+        )
 
     @action(
         detail=False,
