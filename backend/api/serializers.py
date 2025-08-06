@@ -85,7 +85,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Serializer for reading ingredients in a recipe."""
 
-    id = serializers.ReadOnlyField(source='ingredient.id')
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    amount = serializers.IntegerField()
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
@@ -96,6 +97,14 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
+
+    def validate_amount(self, value):
+        """Return recipes for the given user."""
+        if value < 1:
+            raise serializers.ValidationError(
+                'Количество ингредиента должно быть больше нуля.'
+            )
+        return value
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -142,32 +151,11 @@ class RecipeSerializer(serializers.ModelSerializer):
         return ShoppingCart.objects.filter(author=user, recipe=obj).exists()
 
 
-class RecipeIngredientWriteSerializer(serializers.Serializer):
-    """Serializer for writing ingredients in a recipe."""
-
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField()
-
-    class Meta:
-        """Meta class for RecipeIngredientWriteSerializer."""
-
-        model = RecipeIngredient
-        fields = ('id', 'amount')
-
-    def validate_amount(self, value):
-        """Return recipes for the given user."""
-        if value < 1:
-            raise serializers.ValidationError(
-                'Количество ингредиента должно быть больше нуля.'
-            )
-        return value
-
-
 class RecipeWriteSerializer(serializers.ModelSerializer):
     """Serializer for writing recipes."""
 
     author = UserConfigSerializer(read_only=True)
-    ingredients = RecipeIngredientWriteSerializer(many=True)
+    ingredients = RecipeIngredientSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
     image = Base64ImageField(required=True, allow_null=False)
