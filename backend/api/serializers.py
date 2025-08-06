@@ -23,13 +23,13 @@ from .serializer_fields import Base64ImageField
 User = get_user_model()
 
 
-class CustomUserSerializer(UserSerializer):
+class UserConfigSerializer(UserSerializer):
     """Serializer for user representation with subscription and avatar."""
 
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
-        """Meta class for CustomUserSerializer."""
+        """Meta class for UserConfigSerializer."""
 
         model = User
         fields = ('id', 'email', 'username',
@@ -39,11 +39,12 @@ class CustomUserSerializer(UserSerializer):
     def get_is_subscribed(self, obj):
         """Return True if the current user is subscribed to obj."""
         request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
-        return Follower.objects.filter(
-            follower=request.user, followed=obj
-        ).exists()
+        return (
+            bool(request)
+            and request.user.is_authenticated
+            and Follower.objects.filter(
+                follower=request.user, followed=obj).exists()
+        )
 
 
 class AvatarSerializer(serializers.ModelSerializer):
@@ -100,7 +101,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     """Serializer for reading recipes."""
 
-    author = CustomUserSerializer(read_only=True)
+    author = UserConfigSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     ingredients = RecipeIngredientSerializer(
         source='recipeingredient_set',
@@ -165,7 +166,7 @@ class RecipeIngredientWriteSerializer(serializers.Serializer):
 class RecipeWriteSerializer(serializers.ModelSerializer):
     """Serializer for writing recipes."""
 
-    author = CustomUserSerializer(read_only=True)
+    author = UserConfigSerializer(read_only=True)
     ingredients = RecipeIngredientWriteSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
