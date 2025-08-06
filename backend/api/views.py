@@ -115,13 +115,9 @@ class UserActionsViewSet(UserViewSet):
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        follow_relation = Follower.objects.filter(
-            follower=follower,
-            followed=followed
-        )
-
-        deleted_count, _ = follow_relation.delete()
-        if not deleted_count:
+        deleted, _ = Follower.objects.filter(follower=follower,
+                                             followed=followed).delete()
+        if not deleted:
             return Response(
                 {'detail': 'Вы не подписаны на этого пользователя.'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -246,24 +242,23 @@ class RecipeViewSet(ModelViewSet):
         user = request.user
 
         if request.method == 'POST':
-            if Favorite.objects.filter(author=user, recipe=recipe).exists():
-                return Response(
-                    {'errors': 'Рецепт уже в избранном.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            Favorite.objects.create(author=user, recipe=recipe)
+            obj, favorited = Favorite.objects.get_or_create(
+                author=user,
+                recipe=recipe)
+            if not favorited:
+                return Response({'detail': 'Рецепт уже в избранном.'},
+                                status=status.HTTP_400_BAD_REQUEST)
             serializer = ShortRecipe(recipe, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if request.method == 'DELETE':
-            favorite = Favorite.objects.filter(author=user, recipe=recipe)
-            if not favorite.exists():
-                return Response(
-                    {'errors': 'Рецепта нет в избранном.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            favorite.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        deleted, _ = Favorite.objects.filter(author=user,
+                                             recipe=recipe).delete()
+        if not deleted:
+            return Response(
+                {'detail': 'Рецепта нет в избранном.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,
@@ -283,19 +278,16 @@ class RecipeViewSet(ModelViewSet):
                 return Response({'detail': 'Рецепт уже в списке покупок'},
                                 status=status.HTTP_400_BAD_REQUEST)
             serializer = ShortRecipe(recipe)
-
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if request.method == 'DELETE':
-            deleted, _ = ShoppingCart.objects.filter(author=user,
-                                                     recipe=recipe).delete()
-            if deleted == 0:
-                return Response(
-                    {'detail': 'Рецепта не было в списке покупок.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        deleted, _ = ShoppingCart.objects.filter(author=user,
+                                                 recipe=recipe).delete()
+        if not deleted:
+            return Response(
+                {'detail': 'Рецепта не было в списке покупок.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
