@@ -226,29 +226,19 @@ class ShortRecipe(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class FollowerSerializer(UserSerializer):
+class FollowerSerializer(UserConfigSerializer):
     """Serializer for user followers."""
 
-    # is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
-    class Meta(UserSerializer.Meta):
-        """Meta class for FollowerSerializer."""
-
+    class Meta:
         model = User
-        fields = ('id', 'email', 'username',
-                  'first_name', 'last_name',
-                  'is_subscribed', 'recipes',
-                  'recipes_count', 'avatar')
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'is_subscribed', 'avatar', 'recipes', 'recipes_count'
+        )
         read_only_fields = ('id', 'email')
-
-    # def get_is_subscribed(self, obj):
-    #     """Return True if the user is subscribed to the given user."""
-    #     user = self.context.get('request').user
-    #     if not user.is_authenticated:
-    #         return False
-    #     return Follower.objects.filter(followed=obj, follower=user).exists()
 
     def get_recipes_count(self, obj):
         """Return the number of recipes for the given user."""
