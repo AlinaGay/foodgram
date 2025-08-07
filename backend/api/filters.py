@@ -10,7 +10,6 @@ from django_filters.rest_framework import (
     CharFilter,
     FilterSet,
     ModelMultipleChoiceFilter,
-    NumberFilter,
 )
 
 from recipes.models import Ingredient, Recipe, Tag
@@ -31,8 +30,7 @@ class IngredientFilter(FilterSet):
 class RecipeFilter(FilterSet):
     """FilterSet for filtering recipes."""
 
-    author = NumberFilter(field_name='author__id')
-    is_favorited = BooleanFilter(method='filter_fav')
+    is_favorited = BooleanFilter(method='filter_favorite')
     is_in_shopping_cart = BooleanFilter(method='filter_cart')
     tags = ModelMultipleChoiceFilter(
         queryset=Tag.objects.all(),
@@ -47,7 +45,7 @@ class RecipeFilter(FilterSet):
         model = Recipe
         fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
 
-    def filter_fav(self, queryset, name, value):
+    def filter_favorite(self, queryset, name, value):
         """Filter recipes that are favorited by the authenticated user."""
         if value and self.request.user.is_authenticated:
             return queryset.filter(favorite__author=self.request.user)
