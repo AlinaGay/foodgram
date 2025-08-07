@@ -7,7 +7,7 @@ ingredients, tags, recipes, favorites, and shopping cart.
 
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models import F, Exists, OuterRef, Sum
+from django.db.models import Exists, F, OuterRef, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -40,7 +40,7 @@ from .serializers import (
     ShortRecipe,
     TagSerializer,
 )
-from .utils import add_object, PageNumberPaginationConfig, remove_object
+from .utils import PageNumberPaginationConfig, add_object, remove_object
 
 User = get_user_model()
 

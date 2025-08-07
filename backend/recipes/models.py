@@ -10,7 +10,6 @@ import hashlib
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
@@ -193,7 +192,7 @@ class Recipe(models.Model):
                     f'/r/{short_hash}/')
             else:
                 domain = getattr(settings, 'DEFAULT_DOMAIN', 'localhost:8000')
-                self.short_link = f'http://{domain}/r/{short_hash}/'
+                self.short_link = f'http://{domain}/{short_hash}/'
             if Recipe.objects.filter(short_link=self.short_link).exists():
                 raise ValidationError("Короткая ссылка уже существует.")
 

@@ -7,18 +7,11 @@ for users, recipes, ingredients, tags, favorites, followers, and shopping cart.
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
-from recipes.models import (
-    Favorite,
-    Follower,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    ShoppingCart,
-    Tag,
-)
+from recipes.models import Follower, Ingredient, Recipe, RecipeIngredient, Tag
+
 from .serializer_fields import Base64ImageField
 
 User = get_user_model()
