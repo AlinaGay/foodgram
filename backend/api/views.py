@@ -6,7 +6,8 @@ ingredients, tags, recipes, favorites, and shopping cart.
 """
 
 from django.contrib.auth import get_user_model
-from django.db.models import F, Sum
+from django.db import models
+from django.db.models import F, Exists, OuterRef, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -182,9 +183,28 @@ class RecipeViewSet(ModelViewSet):
     serializer_class = RecipeSerializer
     pagination_class = PageNumberPaginationConfig
 
-    def perform_create(self, serializer):
-        """Save a new recipe with the authenticated user as the author."""
-        serializer.save(author=self.request.user)
+    def get_queryset(self):
+        queryset = Recipe.objects.all()
+        user = self.request.user
+        if user.is_authenticated:
+            favorited_subquery = Favorite.objects.filter(
+                author=user, recipe=OuterRef('pk')
+            )
+            cart_subquery = ShoppingCart.objects.filter(
+                author=user, recipe=OuterRef('pk')
+            )
+            queryset = queryset.annotate(
+                is_favorited=Exists(favorited_subquery),
+                is_in_shopping_cart=Exists(cart_subquery)
+            )
+        else:
+            queryset = queryset.annotate(
+                is_favorited=models.Value(
+                    False, output_field=models.BooleanField()),
+                is_in_shopping_cart=models.Value(
+                    False, output_field=models.BooleanField()),
+            )
+        return queryset
 
     def get_serializer_class(self):
         """Return the appropriate serializer class depending on the action."""
