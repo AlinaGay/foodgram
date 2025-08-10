@@ -30,8 +30,8 @@ class IngredientFilter(FilterSet):
 class RecipeFilter(FilterSet):
     """FilterSet for filtering recipes."""
 
-    is_favorited = BooleanFilter(method='filter_favorite')
-    is_in_shopping_cart = BooleanFilter(method='filter_cart')
+    is_favorited = BooleanFilter()
+    is_in_shopping_cart = BooleanFilter()
     tags = ModelMultipleChoiceFilter(
         queryset=Tag.objects.all(),
         field_name='tags__slug',
