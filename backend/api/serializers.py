@@ -80,7 +80,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Serializer for reading ingredients in a recipe."""
 
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField()
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
@@ -91,14 +90,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
-
-    def validate_amount(self, value):
-        """Return recipes for the given user."""
-        if value < 1:
-            raise serializers.ValidationError(
-                'Количество ингредиента должно быть больше нуля.'
-            )
-        return value
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -111,8 +102,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True
     )
-    is_favorited = serializers.BooleanField(read_only=True)
-    is_in_shopping_cart = serializers.BooleanField(read_only=True)
+    is_favorited = serializers.BooleanField(read_only=True, default=False)
+    is_in_shopping_cart = serializers.BooleanField(
+        read_only=True, default=False)
     image = Base64ImageField()
 
     class Meta:
