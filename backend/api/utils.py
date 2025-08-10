@@ -4,7 +4,6 @@ from rest_framework.response import Response
 
 
 class PageNumberPaginationConfig(PageNumberPagination):
-    page_size = 6
     page_size_query_param = 'limit'
 
 

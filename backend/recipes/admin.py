@@ -119,19 +119,19 @@ class IngredientAdmin(admin.ModelAdmin):
 
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('follower', 'followed')
-    list_filter = ('followed')
+    list_filter = ('followed',)
     search_fields = ('follower__username', 'followed__username')
 
 
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('author', 'recipe')
-    list_filter = ('user', 'recipe')
+    list_filter = ('author', 'recipe')
     search_fields = ('author__username', 'recipe__name')
 
 
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('author', 'recipe')
-    list_filter = ('user', 'recipe')
+    list_filter = ('author', 'recipe')
     search_fields = ('author__username', 'recipe__name')
 
 
