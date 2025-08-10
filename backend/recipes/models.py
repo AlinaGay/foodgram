@@ -222,8 +222,10 @@ class UserRecipeRelation(models.Model):
     Provides common fields and unique constraints for derived models.
     """
 
-    author = models.ForeignKey('User', on_delete=models.CASCADE)
-    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        'User', on_delete=models.CASCADE, verbose_name='Пользователь')
+    recipe = models.ForeignKey(
+        'Recipe', on_delete=models.CASCADE, verbose_name='Рецепт')
 
     class Meta:
         """Meta class for UserRecipeRelation model."""
@@ -235,6 +237,7 @@ class UserRecipeRelation(models.Model):
                 name='unique_%(app_label)s_%(class)s_author_recipe'
             )
         ]
+        ordering = ['author']
 
     def __str__(self):
         """Return a string representation of the UserRecipeRelation model."""
@@ -243,10 +246,19 @@ class UserRecipeRelation(models.Model):
 
 class Favorite(UserRecipeRelation):
     """Model representing user's favorite recipes."""
+    class Meta(UserRecipeRelation.Meta):
+        """Meta class for Recipe model."""
+
+        verbose_name = 'Избранное'
 
 
 class ShoppingCart(UserRecipeRelation):
     """Model representing user's shopping cart items."""
+
+    class Meta(UserRecipeRelation.Meta):
+        """Meta class for Recipe model."""
+
+        verbose_name = 'Корзина'
 
 
 class Follower(models.Model):
@@ -255,12 +267,14 @@ class Follower(models.Model):
     follower = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='following'
+        related_name='following',
+        verbose_name='Подписчик'
     )
     followed = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='followers'
+        related_name='followers',
+        verbose_name='Подписка'
     )
 
     class Meta:
@@ -276,6 +290,8 @@ class Follower(models.Model):
                 name='prevent_self_follow'
             )
         ]
+        verbose_name = 'Подписчик'
+        verbose_name_plural = 'Подписчики'
 
     def __str__(self):
         """Return a string representation of the Follower model."""

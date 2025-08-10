@@ -9,8 +9,16 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.db.models import Count
 
-from .models import Ingredient, Recipe, RecipeIngredient, Tag, User
-
+from .models import (
+    Favorite,
+    Follower,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag,
+    User
+)    
 
 @admin.action(description='Заблокировать выбранных пользователей')
 def block_users(modeladmin, request, queryset):
@@ -109,7 +117,28 @@ class IngredientAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('follower', 'followed')
+    list_filter = ('followed')
+    search_fields = ('follower__username', 'followed__username')
+
+
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ('author', 'recipe')
+    list_filter = ('user', 'recipe')
+    search_fields = ('author__username', 'recipe__name')
+
+
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = ('author', 'recipe')
+    list_filter = ('user', 'recipe')
+    search_fields = ('author__username', 'recipe__name')
+
+
 admin.site.register(User, UserAdminConfig)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Recipe, RecipeAdmin)
+admin.site.register(Follower, SubscriptionAdmin)
+admin.site.register(Favorite, FavoriteAdmin)
+admin.site.register(ShoppingCart, ShoppingCartAdmin)
