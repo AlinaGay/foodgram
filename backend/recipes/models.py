@@ -11,8 +11,8 @@ import hashlib
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, RegexValidator
-from django.db import models
+from django.core.validators import RegexValidator
+from django.db import models, IntegrityError
 
 from .constants import (
     INGREDIENT_MESUREMENT_MAX_LENGTH,
@@ -146,7 +146,7 @@ class Recipe(models.Model):
     )
     text = models.TextField(verbose_name='Описание')
     cooking_time = models.PositiveIntegerField(
-        validators=[MinValueValidator(MIN_VALUE)],
+        validators=[MIN_VALUE],
         help_text="Время приготовления (в минутах), целое число ≥ 1.",
         verbose_name='Время приготовления'
     )
@@ -161,42 +161,24 @@ class Recipe(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Saves the Recipe instance to the database.
+        Save the Recipe instance to the database.
 
-        If the instance is being created and does
-        not have a short_link, generates a unique short_link
-        using an MD5 hash of the primary key and name.
-        The short_link is constructed using either the
-        request's absolute URI or a default domain
-        from settings. If a Recipe with the same short_link
-        already exists, raises a ValidationError.
-
-        Args:
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-            May include 'request' for building absolute URI.
-
-        Raises:
-            ValidationError: If the generated
-            short_link already exists in the database.
+        If the short_link field is not set,
+        attempts to generate a unique short link
+        based on a hash of the author and recipe name.
         """
-        if not self.pk and not self.short_link:
-            super().save(*args, **kwargs)
-            short_hash = hashlib.md5(
-                f"{self.pk}-{self.name}".encode()
-            ).hexdigest()[:8]
-            request = kwargs.pop('request', None)
-
-            if request:
-                self.short_link = request.build_absolute_uri(
-                    f'/r/{short_hash}/')
+        if not self.short_link:
+            for _ in range(5):
+                self.short_link = hashlib.md5(
+                    f"{self.author}-{self.name}".encode()
+                ).hexdigest()[:8]
+                try:
+                    super().save(*args, **kwargs)
+                    break
+                except IntegrityError:
+                    self.short_link = None
             else:
-                domain = getattr(settings, 'DEFAULT_DOMAIN', 'localhost:8000')
-                self.short_link = f'http://{domain}/{short_hash}/'
-            if Recipe.objects.filter(short_link=self.short_link).exists():
-                raise ValidationError("Короткая ссылка уже существует.")
-
-            super().save(update_fields=['short_link'])
+                raise ValidationError("Не удалось сгенерировать короткий код.")
         else:
             super().save(*args, **kwargs)
 
@@ -213,7 +195,7 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.SET_NULL,
                                    blank=True, null=True)
     amount = models.PositiveIntegerField(
-        validators=[MinValueValidator(MIN_VALUE)]
+        validators=[MIN_VALUE]
     )
 
     class Meta:

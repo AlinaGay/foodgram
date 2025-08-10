@@ -10,6 +10,7 @@ from django.db import models
 from django.db.models import Exists, F, OuterRef, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status
@@ -216,18 +217,11 @@ class RecipeViewSet(ModelViewSet):
     def get_link(self, request, pk=None):
         """Generate and return a short link for the specified recipe."""
         recipe = get_object_or_404(Recipe, id=pk)
-        if recipe.short_link:
-            return Response({"short-link": recipe.short_link})
-
-        try:
+        if not recipe.short_link:
             recipe.save(request=request)
-            return Response({"short-link": recipe.short_link})
+        url = request.build_absolute_uri(f'/r/{recipe.short_link}/')
 
-        except Exception as e:
-            return Response(
-                {"error": f"Ошибка генерации ссылки: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return Response({"short-link": url})
 
     @action(detail=True, methods=['post', 'delete'],
             url_path='favorite', permission_classes=(IsAuthenticated,))
