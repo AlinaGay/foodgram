@@ -17,8 +17,9 @@ from .models import (
     RecipeIngredient,
     ShoppingCart,
     Tag,
-    User
-)    
+    User,
+)
+
 
 @admin.action(description='Заблокировать выбранных пользователей')
 def block_users(modeladmin, request, queryset):
