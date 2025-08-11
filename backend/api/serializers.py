@@ -192,12 +192,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        """Return the serialized representation of the recipe."""
-        view = self.context.get('view')
-        if view is not None:
-            annotated_instance = view.get_queryset().get(pk=instance.pk)
-            return RecipeSerializer(
-                annotated_instance, context=self.context).data
+        """
+        Return the serialized representation of the recipe.
+        Ensures that all annotated fields are included in the output.
+        """
         return RecipeSerializer(instance, context=self.context).data
 
 

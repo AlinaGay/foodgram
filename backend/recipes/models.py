@@ -12,6 +12,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import IntegrityError, models
+from django.db.models import BooleanField, Exists, OuterRef, Value
 
 from .constants import (
     INGREDIENT_MESUREMENT_MAX_LENGTH,
@@ -125,6 +126,45 @@ class Tag(models.Model):
         return f"{self.name} ({self.slug})"
 
 
+class RecipeManager(models.Manager):
+    """
+    Custom manager for the Recipe model.
+
+    Provides a method to annotate recipes with user-specific fields,
+    such as whether the recipe is favorited or in the user's shopping cart.
+    """
+
+    def with_user_annotations(self, user=None):
+        """
+        Return a queryset of annotated Recipe objects.
+
+        Adds boolean annotations:
+        - is_favorited: True if the given user has favorited the recipe.
+        - is_in_shopping_cart: True if the recipe
+          is in the user's shopping cart.
+
+        If no user is provided or the user is not authenticated,
+        both fields are annotated as False.
+        """
+        queryset = self.get_queryset()
+
+        if user and user.is_authenticated:
+            favorited_subquery = Favorite.objects.filter(
+                author=user, recipe=OuterRef('pk')
+            )
+            cart_subquery = ShoppingCart.objects.filter(
+                author=user, recipe=OuterRef('pk')
+            )
+            return queryset.annotate(
+                is_favorited=Exists(favorited_subquery),
+                is_in_shopping_cart=Exists(cart_subquery)
+            )
+        return queryset.annotate(
+            is_favorited=Value(False, output_field=BooleanField()),
+            is_in_shopping_cart=Value(False, output_field=BooleanField())
+        )
+
+
 class Recipe(models.Model):
     """Model for recipes."""
 
@@ -150,6 +190,7 @@ class Recipe(models.Model):
         verbose_name='Время приготовления'
     )
     short_link = models.URLField(null=True, blank=True)
+    objects = RecipeManager()
 
     class Meta:
         """Meta class for Recipe model."""

@@ -6,8 +6,7 @@ ingredients, tags, recipes, favorites, and shopping cart.
 """
 
 from django.contrib.auth import get_user_model
-from django.db import models
-from django.db.models import Exists, F, OuterRef, Sum
+from django.db.models import F, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -184,27 +183,13 @@ class RecipeViewSet(ModelViewSet):
     pagination_class = PageNumberPaginationConfig
 
     def get_queryset(self):
-        queryset = Recipe.objects.all()
-        user = self.request.user
-        if user.is_authenticated:
-            favorited_subquery = Favorite.objects.filter(
-                author=user, recipe=OuterRef('pk')
-            )
-            cart_subquery = ShoppingCart.objects.filter(
-                author=user, recipe=OuterRef('pk')
-            )
-            queryset = queryset.annotate(
-                is_favorited=Exists(favorited_subquery),
-                is_in_shopping_cart=Exists(cart_subquery)
-            )
-        else:
-            queryset = queryset.annotate(
-                is_favorited=models.Value(
-                    False, output_field=models.BooleanField()),
-                is_in_shopping_cart=models.Value(
-                    False, output_field=models.BooleanField()),
-            )
-        return queryset
+        """
+        Return a queryset of annotated Recipe objects.
+
+        This method uses the custom manager method
+         `with_user_annotations` to add fields.
+        """
+        return Recipe.objects.with_user_annotations(user=self.request.user)
 
     def get_serializer_class(self):
         """Return the appropriate serializer class depending on the action."""
