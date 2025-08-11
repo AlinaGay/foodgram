@@ -290,6 +290,7 @@ class Favorite(UserRecipeRelation):
         """Meta class for Recipe model."""
 
         verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
 
 
 class ShoppingCart(UserRecipeRelation):
@@ -299,6 +300,7 @@ class ShoppingCart(UserRecipeRelation):
         """Meta class for Recipe model."""
 
         verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзины'
 
 
 class Follower(models.Model):
