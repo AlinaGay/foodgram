@@ -5,10 +5,11 @@ This module contains viewsets and actions for users,
 ingredients, tags, recipes, favorites, and shopping cart.
 """
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import F, Sum
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status
@@ -16,6 +17,7 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from recipes.models import (
@@ -290,3 +292,14 @@ class RecipeViewSet(ModelViewSet):
             "attachment; filename=ingredients.txt"
         )
         return response
+
+
+class RecipeShortLinkRedirect(APIView):
+    """View for handling short links redirection to frontend."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, short_link):
+        recipe = get_object_or_404(Recipe, short_link=short_link)
+        target = f"{settings.FRONTEND_URL}/recipes/{recipe.id}"
+        return redirect(target)
