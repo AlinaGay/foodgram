@@ -132,8 +132,6 @@ AUTH_USER_MODEL = 'recipes.User'
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-FRONTEND_URL = "https://foodgram-site.zapto.org"
-
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

@@ -5,7 +5,6 @@ This module contains viewsets and actions for users,
 ingredients, tags, recipes, favorites, and shopping cart.
 """
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import F, Sum
 from django.http import HttpResponse
@@ -301,5 +300,5 @@ class RecipeShortLinkRedirect(APIView):
 
     def get(self, request, short_link):
         recipe = get_object_or_404(Recipe, short_link=short_link)
-        target = f"{settings.FRONTEND_URL}/recipes/{recipe.id}"
+        target = request.build_absolute_uri(f'/recipes/{recipe.id}')
         return redirect(target)
