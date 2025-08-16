@@ -20,6 +20,8 @@ CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://89.169.169.58')
 
 DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', 'localhost:8000')
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Application definition
 
 INSTALLED_APPS = [
