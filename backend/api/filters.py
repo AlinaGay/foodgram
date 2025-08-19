@@ -44,15 +44,3 @@ class RecipeFilter(FilterSet):
 
         model = Recipe
         fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
-
-    def filter_favorite(self, queryset, name, value):
-        """Filter recipes that are favorited by the authenticated user."""
-        if value and self.request.user.is_authenticated:
-            return queryset.filter(favorite__author=self.request.user)
-        return queryset.none() if value else queryset
-
-    def filter_cart(self, queryset, name, value):
-        """Filter recipes that are in the shopping cart."""
-        if value and self.request.user.is_authenticated:
-            return queryset.filter(shoppingcart__author=self.request.user)
-        return queryset.none() if value else queryset
