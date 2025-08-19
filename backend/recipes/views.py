@@ -14,6 +14,6 @@ class RecipeShortLinkRedirect(APIView):
     def get(self, request, short_link):
         try:
             recipe = Recipe.objects.get(short_link=short_link)
-            return redirect(f'/recipes/{recipe.id}')
+            return redirect(f'/api/recipes/{recipe.id}')
         except ObjectDoesNotExist:
             return redirect('/404')
