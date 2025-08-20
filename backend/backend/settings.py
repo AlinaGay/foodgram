@@ -122,6 +122,8 @@ USE_L10N = True
 
 USE_TZ = True
 
+PAGE_SIZE = 6
+
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'collected_static'
 

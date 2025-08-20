@@ -10,13 +10,14 @@ import hashlib
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import IntegrityError, models
 from django.db.models import BooleanField, Exists, OuterRef, Value
 
 from .constants import (
     INGREDIENT_MESUREMENT_MAX_LENGTH,
     INGREDIENT_NAME_MAX_LENGTH,
+    MIN_TIME,
     MIN_VALUE,
     RECIPE_NAME_MAX_LENGTH,
     TAG_MAX_LENGTH,
@@ -185,7 +186,7 @@ class Recipe(models.Model):
     )
     text = models.TextField(verbose_name='Описание')
     cooking_time = models.PositiveIntegerField(
-        validators=MIN_VALUE,
+        validators=[MinValueValidator(MIN_TIME)],
         help_text="Время приготовления (в минутах), целое число ≥ 1.",
         verbose_name='Время приготовления'
     )
@@ -235,7 +236,7 @@ class RecipeIngredient(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.SET_NULL,
                                    blank=True, null=True)
     amount = models.PositiveIntegerField(
-        validators=MIN_VALUE
+        validators=[MinValueValidator(MIN_VALUE)]
     )
 
     class Meta:
