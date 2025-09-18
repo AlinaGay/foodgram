@@ -1,122 +1,143 @@
 # Foodgram
 
-**Foodgram** — платформа для публикации, поиска и хранения кулинарных рецептов. Пользователи могут добавлять свои блюда, собирать их в избранное, подписываться на любимых авторов и формировать список покупок по ингредиентам.
+**Foodgram** is a platform for publishing, discovering, and storing culinary recipes.
+Users can add their own dishes, save favorites, follow their favorite authors, and generate a shopping list based on ingredients.
 
 ---
 
-## Демо-версия
+## Demo Version
 
 [https://foodgram-site.zapto.org](https://foodgram-site.zapto.org)
 
 ---
 
-## Функционал
+## Features
 
-- **Регистрация и аутентификация** (djoser + authtoken)
-- **CRUD для рецептов** — публикация, редактирование и удаление рецептов
-- **Работа с ингредиентами и тегами** — фильтрация и поиск
-- **Добавление рецептов в избранное**
-- **Формирование и скачивание списка покупок** по ингредиентам
-- **Подписки на других пользователей** и их рецепты
-- **Загрузка/изменение аватара**
-- **Фильтрация по тегам, авторам, избранному и корзине**
-- **Пагинация для всех списков**
-
----
-
-## Технологии
-
-- Python 3.11+
-- Django 5.1
-- Django REST Framework
-- Django Filters
-- Djoser (аутентификация через токены)
-- PostgreSQL/SQLite
-- Docker, docker-compose
-- drf-yasg (автогенерация документации API)
+* **Registration and Authentication** (djoser + authtoken)
+* **CRUD for Recipes** — create, edit, and delete recipes
+* **Work with Ingredients and Tags** — filtering and search
+* **Add Recipes to Favorites**
+* **Generate and Download a Shopping List** based on ingredients
+* **Follow Other Users** and their recipes
+* **Upload/Change Avatar**
+* **Filter by Tags, Authors, Favorites, and Cart**
+* **Pagination** for all lists
 
 ---
 
-## Быстрый старт
+## Technologies
 
-### Клонирование репозитория
+* Python 3.11+
+* Django 5.1
+* Django REST Framework
+* Django Filters
+* Djoser (token-based authentication)
+* PostgreSQL/SQLite
+* Docker, docker-compose
+* drf-yasg (auto-generated API documentation)
+
+---
+
+## Quick Start
+
+### Clone the Repository
 
 ```bash
 git clone https://github.com/yourusername/foodgram.git
 cd foodgram
 ```
 
+---
 
-## Настройка окружения
+## Environment Setup
 
-### Через Docker Compose (рекомендуется)
+### Using Docker Compose (recommended)
 
-1. Скопируйте файл переменных окружения .env (пример ниже)
+1. Copy the `.env` file (see example below)
 
-2. Запустите проект:
+2. Start the project:
+
 ```bash
 docker compose up -d
 ```
 
-3. Создайте миграции
+3. Run migrations:
+
 ```bash
 docker compose exec backend python manage.py migrate
 ```
 
-4. После запуска заполните ингредиенты:
+4. Populate ingredients:
+
 ```bash
 docker compose exec backend python manage.py import_ingredients
 ```
-5. Создайте суперюзера:
+
+5. Create a superuser:
+
 ```bash
 docker compose exec backend python manage.py createsuperuser
 ```
-6. Добавьте тэги через админку (/admin), предварительно залогинившись в админке (введите данные суперюзера)
 
-### Через Python (локально, без Docker)
+6. Add tags via the admin panel (`/admin`) after logging in with the superuser credentials.
 
-1. Перейдите в папку проекта и создайте виртуальное окружение:
+---
+
+### Run Locally (without Docker)
+
+1. Navigate to the project folder and create a virtual environment:
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
-2. Установите зависимости:
+
+2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Проведите миграции и соберите статику:
+3. Apply migrations and collect static files:
+
 ```bash
 python manage.py migrate
 python manage.py collectstatic --noinput
 ```
 
-4. Заполните ингредиенты:
+4. Populate ingredients:
+
 ```bash
 python manage.py import_ingredients
 ```
-5. Запустите сервер:
+
+5. Run the development server:
+
 ```bash
 python manage.py runserver
 ```
-6. Создайте суперюзера:
+
+6. Create a superuser:
+
 ```bash
 python manage.py createsuperuser
 ```
-7. Добавьте тэги через админку (/admin), предварительно залогинившись в админке (введите данные суперюзера)
+
+7. Add tags via the admin panel (`/admin`) after logging in with the superuser credentials.
 
 ---
 
-## Аутентификация
+## Authentication
 
-Используется djoser + authtoken (API-токены).
-Авторизация по email и паролю, получение токена:
+Uses **djoser + authtoken** (API tokens).
+Authentication via email and password, token retrieval:
 
-- POST /api/auth/token/login/ — получение токена (email, password)
-- Токен добавляется в заголовок Authorization: Token <your_token>
+* `POST /api/auth/token/login/` — obtain a token (email, password)
+* Add the token to the header: `Authorization: Token <your_token>`
 
 ---
 
-## Контакты
+## Contacts
 
-Автор: [AlinaGay](https://github.com/AlinaGay)
+Author: [AlinaGay](https://github.com/AlinaGay)
+
