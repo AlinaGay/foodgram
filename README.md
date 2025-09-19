@@ -137,7 +137,8 @@ Authentication via email and password, token retrieval:
 
 ---
 
-## Contacts
+## Author
 
-Author: [AlinaGay](https://github.com/AlinaGay)
+[AlinaGay](https://github.com/AlinaGay)
+| Backend Developer • Python Engineer |
 
